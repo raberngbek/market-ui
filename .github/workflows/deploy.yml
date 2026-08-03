@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Navigate to project folder
-            cd /var/www/market-ui   # Adjust to your app path
+            cd /home/ubuntu/market-ui   # Adjust to your app path
 
             # Pull latest changes
             git pull origin main
