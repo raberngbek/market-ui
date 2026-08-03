@@ -38,10 +38,13 @@ jobs:
             echo ">>>> Verify dist"
             ls -la dist/index.html dist/assets/
 
-            echo ">>>> Show nginx configs"
-            sudo grep -rn "root\|server_name\|listen" /etc/nginx/ --include="*.conf" --include="*available*" 2>/dev/null || true
+            echo ">>>> Find and fix nginx config"
+            NGINX_CONF=$(sudo grep -rl "server_name\|root" /etc/nginx/ --include="*.conf" --include="default" 2>/dev/null | head -1)
+            echo "Config: $NGINX_CONF"
+            sudo sed -i 's|root /var/www/market-ui/dist;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
+            sudo sed -i 's|root /var/www/market-ui;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
+            sudo nginx -t
 
             echo ">>>> Restart nginx"
             sudo systemctl restart nginx
-
             echo ">>>> Done"
