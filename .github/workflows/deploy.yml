@@ -1,0 +1,35 @@
+name: Deploy market-ui to EC2
+
+on:
+  push:
+    branches:
+      - main  # Triggers when you push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Navigate to project folder
+            cd /var/www/market-ui   # Adjust to your app path
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install dependencies & build project
+            npm install
+            npm run build
+
+            # Reload web server / process manager
+            sudo systemctl reload nginx
+            # OR if running PM2: pm2 reload all
