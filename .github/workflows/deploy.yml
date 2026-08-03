@@ -20,16 +20,13 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Navigate to project folder
-            cd /home/ubuntu/market-ui   # Adjust to your app path
+            cd /home/ubuntu/market-ui
 
-            # Pull latest changes
             git pull origin main
 
-            # Install dependencies & build project
-            npm install
+            # Only install if package.json changed
+            git diff HEAD@{1} -- package.json --quiet || npm install
+
             npm run build
 
-            # Reload web server / process manager
             sudo systemctl reload nginx
-            # OR if running PM2: pm2 reload all
