@@ -20,13 +20,25 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd /home/ubuntu/market-ui
 
+            echo ">>>> Git pull"
             git pull origin main
 
-            # Only install if package.json changed
-            git diff HEAD@{1} -- package.json --quiet || npm install
+            echo ">>>> Node version"
+            node -v && npm -v
 
+            echo ">>>> Install deps"
+            npm install
+
+            echo ">>>> Build"
             npm run build
 
-            sudo systemctl reload nginx
+            echo ">>>> Verify dist"
+            ls -la dist/index.html dist/assets/
+
+            echo ">>>> Restart nginx"
+            sudo systemctl restart nginx
+
+            echo ">>>> Done"
