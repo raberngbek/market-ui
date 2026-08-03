@@ -31,7 +31,7 @@ function Header() {
   const submitSearch = (event) => { event.preventDefault(); if (query.trim()) { navigate(`/search?q=${encodeURIComponent(query.trim())}`); setQuery(''); } };
   const linkClass = ({ isActive }) => isActive ? 'nav-link active' : 'nav-link';
   return <>
-    <div className="utility-bar"><div className="container utility-inner"><span><MapPin size={14}/> Delivering to 94607</span><span className="utility-promo">Free delivery on $35+ · Code: <b>FRESH10</b></span><span><Phone size={14}/> Delivery help</span></div></div>
+    <div className="utility-bar"><div className="container utility-inner"><span><MapPin size={14}/> Delivering to 94607</span><span className="utility-promo">Free delivery on $10000+ · Code: <b>FRESH10</b></span><span><Phone size={14}/> Delivery help</span></div></div>
     <header className="site-header">
       <div className="container header-main">
         <button className="icon-button mobile-only" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu /></button>
