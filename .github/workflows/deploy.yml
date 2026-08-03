@@ -38,15 +38,8 @@ jobs:
             echo ">>>> Verify dist"
             ls -la dist/index.html dist/assets/
 
-            echo ">>>> Update nginx root path"
-            NGINX_CONF=$(sudo grep -rl "market-ui" /etc/nginx/sites-available/ /etc/nginx/conf.d/ /etc/nginx/nginx.conf 2>/dev/null | head -1)
-            if [ -z "$NGINX_CONF" ]; then
-              NGINX_CONF=$(sudo grep -rl "root" /etc/nginx/sites-available/default 2>/dev/null || echo "/etc/nginx/sites-available/default")
-            fi
-            echo "Found nginx config: $NGINX_CONF"
-            sudo sed -i "s|root /var/www/market-ui|root /home/ubuntu/market-ui|g" "$NGINX_CONF"
-            sudo sed -i "s|root .*market-ui.*;|root /home/ubuntu/market-ui/dist;|g" "$NGINX_CONF"
-            sudo nginx -t
+            echo ">>>> Show nginx configs"
+            sudo grep -rn "root\|server_name\|listen" /etc/nginx/ --include="*.conf" --include="*available*" 2>/dev/null || true
 
             echo ">>>> Restart nginx"
             sudo systemctl restart nginx
