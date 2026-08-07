@@ -3,7 +3,7 @@ name: Deploy market-ui to EC2
 on:
   push:
     branches:
-      - main  # Triggers when you push to main branch
+      - main
 
 jobs:
   deploy:
@@ -38,13 +38,41 @@ jobs:
             echo ">>>> Verify dist"
             ls -la dist/index.html dist/assets/
 
-            echo ">>>> Find and fix nginx config"
-            NGINX_CONF=$(sudo grep -rl "server_name\|root" /etc/nginx/ --include="*.conf" --include="default" 2>/dev/null | head -1)
-            echo "Config: $NGINX_CONF"
-            sudo sed -i 's|root /var/www/market-ui/dist;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
-            sudo sed -i 's|root /var/www/market-ui;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
+            echo ">>>> Update nginx config"
+            TARGET="/home/ubuntu/market-ui/dist"
+            NGINX_CONF="/etc/nginx/sites-available/market-ui"
+
+            if [ ! -f "$NGINX_CONF" ]; then
+              echo "Creating new nginx site config"
+              sudo tee "$NGINX_CONF" > /dev/null <<'NGINXEOF'
+            server {
+                listen 80;
+                server_name _;
+
+                root /home/ubuntu/market-ui/dist;
+                index index.html;
+
+                location / {
+                    try_files $uri $uri/ /index.html;
+                }
+
+                location /assets/ {
+                    expires 30d;
+                    add_header Cache-Control "public, immutable";
+                }
+            }
+            NGINXEOF
+              sudo ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/market-ui
+            else
+              sudo sed -i "s|root .*;|root ${TARGET};|" "$NGINX_CONF"
+            fi
+
             sudo nginx -t
 
             echo ">>>> Restart nginx"
             sudo systemctl restart nginx
+
+            echo ">>>> Verify deployment"
+            curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost/ || echo "WARN: curl check failed"
+            echo ""
             echo ">>>> Done"

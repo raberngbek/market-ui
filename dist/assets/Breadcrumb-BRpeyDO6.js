@@ -1,1 +1,0 @@
-import{b as e,y as t}from"./index-T67D65ot.js";var n=t();function r({current:t}){return(0,n.jsxs)(`div`,{className:`breadcrumb`,children:[(0,n.jsx)(e,{to:`/`,children:`Home`}),(0,n.jsx)(`span`,{children:`/`}),(0,n.jsx)(`span`,{children:t})]})}export{r as t};
