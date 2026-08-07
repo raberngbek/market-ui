@@ -40,33 +40,10 @@ jobs:
 
             echo ">>>> Update nginx root"
             TARGET="/home/ubuntu/market-ui/dist"
-            NGINX_CONF=$(sudo grep -rl "root" /etc/nginx/ --include="*.conf" 2>/dev/null | head -1)
-
-            if [ -n "$NGINX_CONF" ]; then
-              echo "Found nginx config: $NGINX_CONF"
-              sudo cp "$NGINX_CONF" "${NGINX_CONF}.bak"
-              sudo sed -i "s|root .*;|root ${TARGET};|" "$NGINX_CONF"
-            else
-              echo "No nginx config found, creating default"
-              sudo tee /etc/nginx/conf.d/market-ui.conf > /dev/null <<NGINXEOF
-            server {
-                listen 80;
-                server_name _;
-
-                root /home/ubuntu/market-ui/dist;
-                index index.html;
-
-                location / {
-                    try_files \$uri \$uri/ /index.html;
-                }
-
-                location /assets/ {
-                    expires 30d;
-                    add_header Cache-Control "public, immutable";
-                }
-            }
-            NGINXEOF
-            fi
+            NGINX_CONF=$(sudo grep -rl "root" /etc/nginx/ --include="*.conf" --include="default" 2>/dev/null | head -1)
+            echo "Found nginx config: $NGINX_CONF"
+            sudo cp "$NGINX_CONF" "${NGINX_CONF}.bak"
+            sudo sed -i "s|root .*;|root ${TARGET};|" "$NGINX_CONF"
 
             sudo nginx -t
 
