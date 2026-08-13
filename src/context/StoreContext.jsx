@@ -56,7 +56,8 @@ export function StoreProvider({ children }) {
     const tax = subtotal * .07;
     return { subtotal, shipping, tax, total: subtotal + shipping + tax };
   }, [cart]);
-  const value = { cart, wishlist, compare, orders, account, setAccount, cartOpen, setCartOpen, toasts, notify, addToCart, updateQty, removeCart, toggleList, clearCart, placeOrder, totals };
+  const dismissToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
+  const value = { cart, wishlist, compare, orders, account, setAccount, cartOpen, setCartOpen, toasts, notify, dismissToast, addToCart, updateQty, removeCart, toggleList, clearCart, placeOrder, totals };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 

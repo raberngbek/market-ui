@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { Filter, Grid2X2, List, Search, SlidersHorizontal, Star, X } from 'lucide-react';
 import { products } from '../data/catalog';
@@ -15,6 +15,7 @@ export default function Shop({ search, deals }) {
   const decodedCategory = category ? decodeURIComponent(category) : '';
   const [filters, setFilters] = useState({ category: decodedCategory, brand: '', rating: 0, inStock: false, maxPrice: 50 });
   const [sort, setSort] = useState(location.search.includes('sort=new') ? 'new' : 'popular'); const [grid, setGrid] = useState(true); const [drawer, setDrawer] = useState(false); const [page, setPage] = useState(1);
+  useEffect(() => { setFilters((prev) => ({ ...prev, category: decodedCategory })); setPage(1); }, [decodedCategory, query]);
   const deferredQuery = useDeferredValue(query); const title = search ? `Results for “${query}”` : deals ? 'Today’s best deals' : decodedCategory || 'Shop all';
   const filtered = useMemo(() => products.filter((product) => (!filters.category || product.category === filters.category) && (!filters.brand || product.brand === filters.brand) && product.price <= filters.maxPrice && product.rating >= filters.rating && (!filters.inStock || product.stock > 0) && (!deferredQuery || `${product.name} ${product.category} ${product.brand}`.toLowerCase().includes(deferredQuery.toLowerCase())) && (!deals || Boolean(product.oldPrice))), [filters, deferredQuery, deals]);
   const sorted = useMemo(() => [...filtered].sort((a,b) => sort === 'price-low' ? a.price-b.price : sort === 'price-high' ? b.price-a.price : sort === 'rating' ? b.rating-a.rating : sort === 'new' ? b.id.localeCompare(a.id) : b.sold-a.sold), [filtered, sort]);

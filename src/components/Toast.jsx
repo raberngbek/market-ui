@@ -9,7 +9,7 @@ const icons = {
 };
 
 export default function Toast() {
-  const { toasts } = useStore();
+  const { toasts, dismissToast } = useStore();
 
   if (!toasts || toasts.length === 0) return null;
 
@@ -21,7 +21,7 @@ export default function Toast() {
           <div className="toast" key={toast.id}>
             <span className="toast-icon" style={{ color }}>{icon}</span>
             <span className="toast-message">{toast.message}</span>
-            <button className="toast-close" aria-label="Dismiss">
+            <button className="toast-close" aria-label="Dismiss" onClick={() => dismissToast(toast.id)}>
               <X size={14} />
             </button>
           </div>
