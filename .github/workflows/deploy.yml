@@ -44,6 +44,7 @@ jobs:
             echo "Config: $NGINX_CONF"
             sudo sed -i 's|root /var/www/market-ui/dist;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
             sudo sed -i 's|root /var/www/market-ui;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
+            sudo sed -i 's|try_files \$uri \$uri/ =404;|try_files \$uri \$uri/ /index.html;|g' $NGINX_CONF 2>/dev/null || true
             sudo nginx -t
 
             echo ">>>> Restart nginx"

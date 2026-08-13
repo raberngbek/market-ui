@@ -11,14 +11,12 @@ import FooterList from './components/FooterList';
 import NewsletterForm from './components/NewsletterForm';
 import Utilities from './components/Utilities';
 
-const Home = lazy(() => import('./pages/Home'));
-const Shop = lazy(() => import('./pages/Shop'));
-const Product = lazy(() => import('./pages/Product'));
-const Cart = lazy(() => import('./pages/CartCheckout').then((m) => ({ default: m.Cart })));
-const Checkout = lazy(() => import('./pages/CartCheckout').then((m) => ({ default: m.Checkout })));
-const OrderConfirmation = lazy(() => import('./pages/CartCheckout').then((m) => ({ default: m.OrderConfirmation })));
-const Account = lazy(() => import('./pages/Account'));
-const Content = lazy(() => import('./pages/Content'));
+import Home from './pages/Home';
+import Shop from './pages/Shop';
+import Product from './pages/Product';
+import { Cart, Checkout, OrderConfirmation } from './pages/CartCheckout';
+import Account from './pages/Account';
+import Content from './pages/Content';
 
 
 function Header() {
