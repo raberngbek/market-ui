@@ -1,4 +1,12 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL || '/api';
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && envUrl.startsWith('http:')) {
+    return envUrl.replace('http:', 'https:');
+  }
+  return envUrl;
+};
+
+const API_URL = getApiUrl();
 
 export const ENDPOINTS = {
   products: '/products',
