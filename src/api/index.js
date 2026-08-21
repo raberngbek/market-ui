@@ -7,3 +7,6 @@ export { orderRouter } from './routers/orders';
 export { accountRouter } from './routers/account';
 export { blogRouter } from './routers/blog';
 export { vendorRouter, contactRouter, newsletterRouter } from './routers/vendor';
+export { unitRouter } from './routers/unit';
+export { marketPlaceRouter } from './routers/marketPlace';
+export { authRouter } from './routers/auth';
