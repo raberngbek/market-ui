@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Code
@@ -19,34 +20,53 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script_stop: true # Automatically stop if a command fails
           script: |
-            set -e
-            cd /home/ubuntu/market-ui
+            # 1. Setup deployment directory
+            PROJECT_DIR="/home/${{ secrets.EC2_USERNAME }}/market-ui"
+            
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo ">>>> Directory does not exist. Cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git $PROJECT_DIR
+              cd $PROJECT_DIR
+            else
+              echo ">>>> Directory exists. Pulling latest code..."
+              cd $PROJECT_DIR
+              git fetch origin main
+              git reset --hard origin/main
+            fi
 
-            echo ">>>> Git fetch && reset"
-            git fetch origin main
-            git reset --hard origin/main
+            # 2. Environment Variables setup (optional but recommended for production)
+            # echo "${{ secrets.PROD_ENV_FILE }}" > .env
 
-            echo ">>>> Node version"
+            echo ">>>> Checking Node version"
             node -v && npm -v
 
-            echo ">>>> Install deps"
-            npm install
+            echo ">>>> Installing dependencies"
+            npm ci # Uses package-lock.json for clean install, faster and more reliable than npm install
 
-            echo ">>>> Build"
+            echo ">>>> Building project"
             npm run build
 
-            echo ">>>> Verify dist"
+            echo ">>>> Verifying dist directory"
             ls -la dist/index.html dist/assets/
 
-            echo ">>>> Find and fix nginx config"
-            NGINX_CONF=$(sudo grep -rl "server_name\|root" /etc/nginx/ --include="*.conf" --include="default" 2>/dev/null | head -1)
-            echo "Config: $NGINX_CONF"
-            sudo sed -i 's|root /var/www/market-ui/dist;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
-            sudo sed -i 's|root /var/www/market-ui;|root /home/ubuntu/market-ui/dist;|g' $NGINX_CONF
-            sudo sed -i 's|try_files \$uri \$uri/ =404;|try_files \$uri \$uri/ /index.html;|g' $NGINX_CONF 2>/dev/null || true
-            sudo nginx -t
+            echo ">>>> Find and fix Nginx configuration"
+            # Ensure safe grep and replace for nginx config
+            NGINX_CONF=$(sudo grep -rl "server_name\|root" /etc/nginx/sites-available/ /etc/nginx/conf.d/ 2>/dev/null | head -1)
+            
+            if [ -n "$NGINX_CONF" ]; then
+              echo ">>>> Updating Nginx config at $NGINX_CONF"
+              sudo sed -i "s|root /var/www/market-ui/dist;|root $PROJECT_DIR/dist;|g" $NGINX_CONF
+              sudo sed -i "s|root /var/www/market-ui;|root $PROJECT_DIR/dist;|g" $NGINX_CONF
+              sudo sed -i "s|try_files \$uri \$uri/ =404;|try_files \$uri \$uri/ /index.html;|g" $NGINX_CONF 2>/dev/null || true
+              
+              sudo nginx -t
+              echo ">>>> Restarting Nginx"
+              sudo systemctl restart nginx
+            else
+              echo ">>>> Warning: No valid Nginx config found for market-ui. Please configure manually."
+            fi
 
-            echo ">>>> Restart nginx"
-            sudo systemctl restart nginx
-            echo ">>>> Done"
+            echo ">>>> Deployment successful! 🚀"
