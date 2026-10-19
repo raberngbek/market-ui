@@ -2,6 +2,7 @@ import { StrictMode, Component } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { StoreProvider } from './context/StoreContext';
+import { LocaleProvider } from './i18n/LocaleContext';
 import App from './App';
 import './styles/global.css';
 
@@ -63,9 +64,11 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <HashRouter>
-        <StoreProvider>
-          <App />
-        </StoreProvider>
+        <LocaleProvider>
+          <StoreProvider>
+            <App />
+          </StoreProvider>
+        </LocaleProvider>
       </HashRouter>
     </ErrorBoundary>
   </StrictMode>,

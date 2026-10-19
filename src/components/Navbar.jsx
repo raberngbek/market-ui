@@ -1,5 +1,6 @@
 import React from 'react';
 import { logout } from '../api/authService';
+import { LocaleSwitcher } from '../i18n/LocaleSwitcher';
 
 const Navbar = ({ onNavigate, onLoginClick, isAuthenticated }) => {
   const handleLogout = () => {
@@ -30,6 +31,7 @@ const Navbar = ({ onNavigate, onLoginClick, isAuthenticated }) => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <LocaleSwitcher />
             {isAuthenticated ? (
               <button onClick={handleLogout} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
                 Log out
