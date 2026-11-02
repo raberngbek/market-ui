@@ -232,6 +232,7 @@ function Header({ onLoginClick, isAuthenticated }) {
 
       {/* MOBILE MENU DRAWER */}
       <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`} aria-hidden={!mobileOpen}>
+        <button className="menu-backdrop" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
         <div className="mobile-menu-panel">
           <div className="menu-top">
             <Link className="brand" to="/" onClick={() => setMobileOpen(false)}>
@@ -270,7 +271,6 @@ function Header({ onLoginClick, isAuthenticated }) {
             <span>Need delivery help?<small>+1 (800) 123-4567</small></span>
           </div>
         </div>
-        <button className="menu-backdrop" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
       </div>
     </>
   );
@@ -280,6 +280,7 @@ function CartDrawer() {
   const { cartOpen, setCartOpen, cart, totals, updateQty, removeCart } = useStore();
   return (
     <div className={`drawer-wrap ${cartOpen ? 'open' : ''}`} aria-hidden={!cartOpen}>
+      <button className="drawer-backdrop" aria-label="Close basket" onClick={() => setCartOpen(false)} />
       <aside className="cart-drawer" aria-label="Grocery basket">
         <header>
           <strong>Your basket <small>({cart.length} items)</small></strong>
@@ -358,7 +359,6 @@ function CartDrawer() {
           </footer>
         )}
       </aside>
-      <button className="drawer-backdrop" aria-label="Close basket" onClick={() => setCartOpen(false)} />
     </div>
   );
 }

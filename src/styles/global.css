@@ -4056,8 +4056,8 @@ input[type="range"].range::-moz-range-thumb {
 .filter-drawer .drawer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(23, 32, 28, 0.55);
-  backdrop-filter: blur(3px);
+  z-index: 1;
+  background: rgba(23, 32, 28, 0.5);
   opacity: 0;
   transition: opacity 0.25s ease;
   border: 0;
@@ -4368,10 +4368,12 @@ input[type="range"].range::-moz-range-thumb {
 .menu-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(23, 32, 28, 0.45);
-  backdrop-filter: blur(3px);
+  z-index: 1;
+  background: rgba(23, 32, 28, 0.5);
   opacity: 0;
   transition: opacity 0.3s ease;
+  border: 0;
+  cursor: pointer;
 }
 
 .open .drawer-backdrop,
@@ -4381,16 +4383,17 @@ input[type="range"].range::-moz-range-thumb {
 
 .cart-drawer {
   position: absolute;
+  z-index: 2;
   right: 0;
   top: 0;
   bottom: 0;
   width: min(440px, 100vw);
-  background: var(--color-surface);
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform 0.3s ease;
-  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
 }
 
 .drawer-wrap.open .cart-drawer {
@@ -4480,14 +4483,15 @@ input[type="range"].range::-moz-range-thumb {
 /* Mobile Navigation Drawer */
 .mobile-menu-panel {
   position: absolute;
+  z-index: 2;
   inset: 0 auto 0 0;
   width: min(340px, 86vw);
-  background: var(--color-surface);
+  background: #FFFFFF;
   padding: 24px;
   transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
-  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-menu.open .mobile-menu-panel {
