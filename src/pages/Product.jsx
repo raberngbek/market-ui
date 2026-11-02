@@ -29,8 +29,8 @@ function DetailsTabs({ product, store }) {
       <div role="tablist">
         {[
           ['description', 'Description'],
-          ['specs', 'Food details'],
-          ['shipping', 'Delivery & freshness'],
+          ['specs', 'Specifications'],
+          ['shipping', 'Shipping & Delivery'],
           ['reviews', `Reviews (${product.reviews})`]
         ].map(([key, label]) => (
           <button
@@ -46,46 +46,46 @@ function DetailsTabs({ product, store }) {
       </div>
       {tab === 'description' && (
         <div className="tab-content">
-          <h2>Good food, picked with care.</h2>
+          <h2>Product Overview</h2>
           <p>
-            {product.name} is selected for flavor, freshness, and the people who make it. It is picked close to your delivery time so it arrives ready for your kitchen.
+            {product.description || `${product.name} from ${product.storeName || product.brand || store?.name} is verified for quality, authenticity, and premium performance.`}
           </p>
           <ul>
-            <li>From {product.storeName || product.brand || store?.name}</li>
-            <li>Hand-picked for your delivery window</li>
-            <li>Stored and transported at the right temperature</li>
+            <li>Direct from verified merchant: {product.storeName || product.brand || store?.name}</li>
+            <li>Original packaging with verified serials and documentation</li>
+            <li>Inspected before dispatch for complete quality assurance</li>
           </ul>
         </div>
       )}
       {tab === 'specs' && (
         <div className="spec-grid">
-          <span>Store / Producer<b>{product.storeName || product.brand || store?.name}</b></span>
-          <span>Food aisle<b>{product.category}</b></span>
-          <span>Available today<b>{product.stock} left</b></span>
+          <span>Store / Merchant<b>{product.storeName || product.brand || store?.name}</b></span>
+          <span>Department<b>{product.category}</b></span>
+          <span>Availability<b>{product.stock} in stock</b></span>
           <span>Item code<b>MF-{product.id.slice(0, 5).toUpperCase()}</b></span>
         </div>
       )}
       {tab === 'shipping' && (
         <div className="tab-content">
-          <h2>Fresh to your door.</h2>
+          <h2>Fast & Tracked Delivery</h2>
           <p>
-            Choose a delivery window at checkout. Most nearby orders arrive in as little as 60 minutes, packed in insulated totes to keep every item at the right temperature.
+            Orders are fulfilled directly by {product.storeName || 'the verified merchant'} with fast dispatch and end-to-end tracking. Eligible for combined consolidated delivery at checkout.
           </p>
         </div>
       )}
       {tab === 'reviews' && (
         <div className="reviews">
           <Rating value={product.rating} />
-          <h2>What food lovers are saying</h2>
+          <h2>Customer Feedback</h2>
           <article>
-            <b>“Exactly as fresh as promised.”</b>
-            <p>Everything looked beautiful and was packed carefully. Sourced directly from {product.storeName || 'the local maker'}.</p>
-            <small>— Jamie L. · Verified customer</small>
+            <b>“Exactly as described and arrived fast.”</b>
+            <p>Authentic quality, solid packaging, and great communication from {product.storeName || 'the seller'}.</p>
+            <small>— Jamie L. · Verified Buyer</small>
           </article>
           <article>
-            <b>“A reliable weeknight favorite.”</b>
-            <p>Delicious, easy, and it arrived right in my delivery window.</p>
-            <small>— Morgan P. · Verified customer</small>
+            <b>“Highly recommend this seller.”</b>
+            <p>Arrived in perfect condition right on schedule.</p>
+            <small>— Morgan P. · Verified Buyer</small>
           </article>
         </div>
       )}
@@ -142,7 +142,7 @@ export default function Product() {
   return (
     <main className={`product-page layout-${layout || '1'}`}>
       <div className="container">
-        <Breadcrumb current={product.short} />
+        <Breadcrumb current={product.short} category={product.category} />
         <div className="detail-layout">
           <section className="product-gallery">
             <div className="thumbs">
@@ -195,7 +195,7 @@ export default function Product() {
               <span>·</span>
               <a href="#reviews">{product.reviews} reviews</a>
               <span>·</span>
-              <span>Picked fresh today</span>
+              <span>Verified Merchant</span>
             </div>
             <div className="detail-price">
               <strong>{money(product.price)}</strong>
@@ -207,24 +207,24 @@ export default function Product() {
               )}
             </div>
             <p className="product-intro">
-              Fresh food directly from {product.storeName || 'local makers'} who care about how it grows, tastes, and arrives at your door.
+              {product.about || `Genuine item from ${product.storeName || product.brand || 'verified seller'}, inspected for quality and backed by MarketFresh marketplace buyer protection.`}
             </p>
             <div className="stock-note">
               <span>
-                <Check size={14} /> Available for delivery today
+                <Check size={14} /> In Stock & Ready to Ship
               </span>
-              <span>{product.stock} portions left in your area</span>
+              <span>{product.stock} units available</span>
             </div>
             <div className="flash-box">
-              <span>FRESH FOOD OFFER</span>
-              <b>Extra 10% off local favorites until midnight</b>
+              <span>MARKETPLACE SPECIAL</span>
+              <b>Extra 10% off verified items with coupon</b>
               <small>
                 Use code <b>FRESH10</b> at checkout
               </small>
             </div>
             <div className="variants">
               <div>
-                <b>Selection:</b> <span>Freshest available</span>
+                <b>Options:</b> <span>Standard Edition</span>
               </div>
               <div className="color-options">
                 {product.colors.map((choice) => (
@@ -259,23 +259,23 @@ export default function Product() {
               onClick={() => addToCart(product, quantity, { option })}
               className="buy-now"
             >
-              Choose delivery time
+              Proceed to Checkout
             </Link>
             <div className="product-assurances">
               <span>
                 <Truck size={19} />
-                <b>Fast local delivery</b>
-                <small>As soon as 60 minutes</small>
+                <b>Fast delivery</b>
+                <small>Tracked express shipping</small>
               </span>
               <span>
                 <RotateCcw size={19} />
-                <b>Freshness promise</b>
-                <small>We make it right</small>
+                <b>Buyer protection</b>
+                <small>30-day hassle-free returns</small>
               </span>
               <span>
                 <ShieldCheck size={19} />
-                <b>Cold-chain care</b>
-                <small>Kept at the right temperature</small>
+                <b>100% authentic</b>
+                <small>Verified seller guarantee</small>
               </span>
             </div>
           </section>
@@ -319,11 +319,11 @@ export default function Product() {
         <section className="related-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">GOOD WITH THIS</span>
-              <h2>Keep the meal going.</h2>
+              <span className="eyebrow">RECOMMENDED FOR YOU</span>
+              <h2>More in {product.category}</h2>
             </div>
             <Link className="text-link" to={`/category/${encodeURIComponent(product.category)}`}>
-              See the aisle
+              Explore category →
             </Link>
           </div>
           <div className="product-grid">
