@@ -77,88 +77,107 @@ function Header({ onLoginClick, isAuthenticated }) {
       </div>
 
       <header className="site-header">
-        <div className="container header-main">
-          <button className="icon-button mobile-only" aria-label="Open menu" onClick={() => setMobileOpen(true)}>
-            <Menu />
-          </button>
-
-          <Link className="brand" to="/">
-            <span className="brand-mark">F</span>
-            <span>Market<span>Fresh</span></span>
-          </Link>
-
-          <form className="header-search" onSubmit={submitSearch}>
-            <Search size={19} />
-            <input 
-              aria-label="Search stores, phones, cars, fashion, tech, and groceries" 
-              value={query} 
-              onChange={(e) => setQuery(e.target.value)} 
-              placeholder="Search stores, phones, cars, tech, fashion, or groceries..." 
-            />
-            <button aria-label="Search" type="submit">Search</button>
-
-            {(productMatches.length > 0 || storeMatches.length > 0) && (
-              <div className="search-suggestions">
-                {storeMatches.length > 0 && (
-                  <div className="suggestion-section">
-                    <small className="suggestion-header">STORES</small>
-                    {storeMatches.map((s) => (
-                      <button key={s.id} type="button" onClick={() => { navigate(`/store/${s.id}`); setQuery(''); }}>
-                        <img src={s.avatar} alt="" />
-                        <span>{s.name}<small>{s.specialty}</small></span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {productMatches.length > 0 && (
-                  <div className="suggestion-section">
-                    <small className="suggestion-header">PRODUCTS</small>
-                    {productMatches.map((product) => (
-                      <button key={product.id} type="button" onClick={() => { navigate(`/product/${product.id}`); setQuery(''); }}>
-                        <img src={product.image} alt="" />
-                        <span>{product.short}<small>{money(product.price)} · {product.storeName || product.brand}</small></span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </form>
-
-          <div className="header-actions">
-            <Link className="header-action hide-mobile" to="/account">
-              <UserRound />
-              <small>Account</small>
+        <div className="container header-container">
+          {/* Top Row: Logo, Search (desktop), Actions & Mobile Cart/Menu */}
+          <div className="header-top-row">
+            <Link className="brand" to="/">
+              <span className="brand-mark">F</span>
+              <span>Market<span>Fresh</span></span>
             </Link>
-            <Link className="header-action" to="/wishlist">
-              <span className="counter-icon">
-                <Heart />
-                <i>{wishlist.length}</i>
-              </span>
-              <small>Wishlist</small>
-            </Link>
-            <Link className="header-action hide-mobile" to="/compare">
-              <span className="counter-icon">
-                <Scale />
-                <i>{compare.length}</i>
-              </span>
-              <small>Compare</small>
-            </Link>
-            <button className="header-action cart-action" onClick={() => setCartOpen(true)}>
-              <span className="counter-icon">
-                <ShoppingBag />
-                <i>{cart.reduce((sum, item) => sum + item.quantity, 0)}</i>
-              </span>
-              <small>Cart</small>
-            </button>
+
+            {/* Desktop Primary Search */}
+            <form className="header-search hide-mobile" onSubmit={submitSearch}>
+              <Search size={20} />
+              <input 
+                aria-label="Search stores, phones, cars, fashion, tech, and groceries" 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)} 
+                placeholder="Search stores, phones, cars, tech, fashion, or groceries..." 
+              />
+              <button aria-label="Search" type="submit">Search</button>
+
+              {(productMatches.length > 0 || storeMatches.length > 0) && (
+                <div className="search-suggestions">
+                  {storeMatches.length > 0 && (
+                    <div className="suggestion-section">
+                      <small className="suggestion-header">STORES</small>
+                      {storeMatches.map((s) => (
+                        <button key={s.id} type="button" onClick={() => { navigate(`/store/${s.id}`); setQuery(''); }}>
+                          <img src={s.avatar} alt="" />
+                          <span>{s.name}<small>{s.specialty}</small></span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {productMatches.length > 0 && (
+                    <div className="suggestion-section">
+                      <small className="suggestion-header">PRODUCTS</small>
+                      {productMatches.map((product) => (
+                        <button key={product.id} type="button" onClick={() => { navigate(`/product/${product.id}`); setQuery(''); }}>
+                          <img src={product.image} alt="" />
+                          <span>{product.short}<small>{money(product.price)} · {product.storeName || product.brand}</small></span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </form>
+
+            {/* Secondary Actions */}
+            <div className="header-actions">
+              <Link className="header-action hide-mobile" to="/account" aria-label="My Account">
+                <UserRound size={20} />
+                <small>Account</small>
+              </Link>
+              <Link className="header-action hide-mobile" to="/wishlist" aria-label="Wishlist">
+                <span className="counter-icon">
+                  <Heart size={20} />
+                  {wishlist.length > 0 && <i>{wishlist.length}</i>}
+                </span>
+                <small>Wishlist</small>
+              </Link>
+              <Link className="header-action hide-mobile" to="/compare" aria-label="Compare items">
+                <span className="counter-icon">
+                  <Scale size={20} />
+                  {compare.length > 0 && <i>{compare.length}</i>}
+                </span>
+                <small>Compare</small>
+              </Link>
+              <button className="header-action cart-action" onClick={() => setCartOpen(true)} aria-label="Open Cart">
+                <span className="counter-icon">
+                  <ShoppingBag size={20} />
+                  {cart.length > 0 && <i>{cart.reduce((sum, item) => sum + item.quantity, 0)}</i>}
+                </span>
+                <small className="hide-mobile">Cart</small>
+              </button>
+              <button className="icon-button mobile-only" aria-label="Open navigation menu" onClick={() => setMobileOpen(true)}>
+                <Menu size={22} />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Second Row: Full-width search */}
+          <div className="header-mobile-search mobile-only">
+            <form className="mobile-search-form" onSubmit={submitSearch}>
+              <Search size={18} />
+              <input 
+                aria-label="Search stores, phones, cars, tech, groceries" 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)} 
+                placeholder="Search stores, phones, cars, groceries..." 
+              />
+              <button type="submit">Search</button>
+            </form>
           </div>
         </div>
 
+        {/* Desktop Navigation */}
         <nav className="desktop-nav">
           <div className="container nav-inner">
             <div className="category-trigger">
               <button onClick={() => setCategoriesOpen(!categoriesOpen)}>
-                <Menu size={19} /> Browse departments <ChevronDown size={16} />
+                <Menu size={18} /> Browse Departments <ChevronDown size={15} />
               </button>
               {categoriesOpen && (
                 <div className="mega-menu">
@@ -168,12 +187,13 @@ function Header({ onLoginClick, isAuthenticated }) {
                     'Fashion & Apparel', 
                     'Home & Living', 
                     'Beauty & Wellness', 
-                    'Fresh Produce', 
-                    'Ready to Eat', 
+                    'Produce', 
+                    'Prepared Meals', 
                     'Bakery', 
-                    'Meat & Seafood', 
+                    'Seafood', 
                     'Dairy & Eggs', 
-                    'Pantry & Drinks'
+                    'Pantry',
+                    'Drinks'
                   ].map((name, index) => (
                     <Link key={name} to={`/category/${encodeURIComponent(name)}`} onClick={() => setCategoriesOpen(false)}>
                       <span>{String(index + 1).padStart(2, '0')}</span>{name}
@@ -182,33 +202,35 @@ function Header({ onLoginClick, isAuthenticated }) {
                   <div className="mega-promo">
                     <small>ALL-IN-ONE MARKETPLACE</small>
                     <strong>Shop directly from<br />independent stores</strong>
-                    <Link to="/">Explore all stores →</Link>
+                    <Link to="/" onClick={() => setCategoriesOpen(false)}>Explore all stores →</Link>
                   </div>
                 </div>
               )}
             </div>
 
-            <NavLink className={linkClass} to="/">Stores Directory</NavLink>
-            <NavLink className={linkClass} to="/shop">All Products</NavLink>
-            <NavLink className={linkClass} to="/deals">Weekly Deals</NavLink>
+            <NavLink className={linkClass} to="/">Stores</NavLink>
+            <NavLink className={linkClass} to="/shop">Products</NavLink>
+            <NavLink className={linkClass} to="/deals">Deals</NavLink>
             <NavLink className={linkClass} to="/vendor/register">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Sparkles size={14} style={{ color: 'var(--yellow)' }} /> Become a Seller
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <Sparkles size={14} style={{ color: 'var(--color-rating)' }} /> Become a Seller
               </span>
             </NavLink>
-            <NavLink className={linkClass} to="/blog">Stories & News</NavLink>
+            <NavLink className={linkClass} to="/blog">Stories</NavLink>
             <NavLink className={linkClass} to="/contact">Help</NavLink>
-            <NavLink className={linkClass} to="/admin">Admin Panel</NavLink>
 
             <span className="nav-spacer" />
+            <Link to="/admin" className="nav-admin-link">
+              <Lock size={13} /> Admin Panel
+            </Link>
             <span className="nav-shipping">
-              <Truck size={17} /> Fast Express & Local Delivery
+              <Truck size={16} /> Verified Store Delivery
             </span>
           </div>
         </nav>
       </header>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU DRAWER */}
       <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`} aria-hidden={!mobileOpen}>
         <div className="mobile-menu-panel">
           <div className="menu-top">
@@ -216,28 +238,30 @@ function Header({ onLoginClick, isAuthenticated }) {
               <span className="brand-mark">F</span>Market<span>Fresh</span>
             </Link>
             <button className="icon-button" onClick={() => setMobileOpen(false)} aria-label="Close menu">
-              <X />
+              <X size={20} />
             </button>
           </div>
-          <form className="mobile-search" onSubmit={submitSearch}>
-            <Search size={18} />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search stores and food" />
-          </form>
           <nav>
             {[
               ['Stores Directory', '/'],
-              ['All Groceries', '/shop'],
-              ['Fresh Produce', '/category/Fresh%20Produce'],
-              ['Ready to Eat', '/category/Ready%20to%20Eat'],
-              ['Meat & Seafood', '/category/Meat%20%26%20Seafood'],
+              ['All Products', '/shop'],
+              ['Phones & Tech', '/category/Phones%20%26%20Tech'],
+              ['Cars & Auto', '/category/Cars%20%26%20Auto'],
+              ['Fashion & Apparel', '/category/Fashion%20%26%20Apparel'],
+              ['Home & Living', '/category/Home%20%26%20Living'],
+              ['Beauty & Wellness', '/category/Beauty%20%26%20Wellness'],
+              ['Fresh Produce', '/category/Produce'],
+              ['Prepared Meals', '/category/Prepared%20Meals'],
+              ['Bakery & Breads', '/category/Bakery'],
               ['Weekly Deals', '/deals'],
               ['Become a Seller', '/vendor/register'],
-              ['Admin Panel', '/admin'],
-              ['Recipes & Stories', '/blog'],
-              ['My Account', '/account']
+              ['Stories & News', '/blog'],
+              ['Customer Help', '/contact'],
+              ['My Account', '/account'],
+              ['Admin Panel', '/admin']
             ].map(([name, to]) => (
               <Link key={name} to={to} onClick={() => setMobileOpen(false)}>
-                {name} <ChevronDown size={16} />
+                {name} <ChevronDown size={15} />
               </Link>
             ))}
           </nav>

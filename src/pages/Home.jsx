@@ -119,15 +119,14 @@ export default function Home() {
       {/* DIRECTORY HERO */}
       <section className="directory-hero">
         <div className="container directory-hero-inner">
-          <span className="eyebrow">ALL-IN-ONE MULTI-STORE MARKETPLACE</span>
+          <span className="eyebrow">VERIFIED MULTI-CATEGORY MARKETPLACE</span>
           <h1>
             Phones, cars, fashion & food,
             <br />
             <em>from verified stores in one place.</em>
           </h1>
           <p>
-            Shop directly from independent stores—electronics & 5G phone hubs, automotive specialists, 
-            streetwear boutiques, modern living, and organic farm markets—with unified fast delivery.
+            Connect directly with verified independent sellers across tech, automotive, fashion, home, and fresh pantry goods—all with unified delivery and buyer protection.
           </p>
 
           {/* STORE SEARCH & CATEGORY BAR */}
@@ -177,9 +176,9 @@ export default function Home() {
             <>
               <div className="directory-results-head">
                 <div>
-                  <span className="eyebrow">NEIGHBORHOOD PRODUCERS</span>
+                  <span className="eyebrow">VERIFIED MERCHANTS & SPECIALTY SHOPS</span>
                   <h2>Registered Stores & Shops</h2>
-                  <p>Explore independent storefronts and their fresh offerings.</p>
+                  <p>Explore independent storefronts and direct catalog offerings.</p>
                 </div>
                 <div className="stores-counter">
                   <b>{filteredStores.length}</b> {filteredStores.length === 1 ? 'store' : 'stores'} available
@@ -218,7 +217,7 @@ export default function Home() {
                             </Link>
                             <div className="store-card-meta">
                               <span className="store-rating">
-                                <Star size={13} fill="#f3bd44" color="#f3bd44" />
+                                <Star size={13} fill="#F2B84B" color="#F2B84B" />
                                 <b>{store.rating}</b>
                                 <small>({store.reviews})</small>
                               </span>
@@ -289,7 +288,7 @@ export default function Home() {
                         <img src={s.avatar} alt={s.name} />
                         <div>
                           <strong>{s.name}</strong>
-                          <small><Star size={11} fill="#f3bd44" color="#f3bd44" /> {s.rating} · {s.location}</small>
+                          <small><Star size={11} fill="#F2B84B" color="#F2B84B" /> {s.rating} · {s.location}</small>
                         </div>
                         <span className="visit-arrow">Visit Store →</span>
                       </Link>

@@ -118,7 +118,7 @@ export default function Storefront() {
                 <h1 className="store-name">{store.name}</h1>
                 <div className="store-meta-line">
                   <span className="store-rating">
-                    <Star size={15} fill="#f3bd44" color="#f3bd44" />
+                    <Star size={15} fill="#F2B84B" color="#F2B84B" />
                     <b>{store.rating}</b>
                     <small>({store.reviews} reviews)</small>
                   </span>

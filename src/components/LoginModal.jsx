@@ -60,7 +60,8 @@ const LoginModal = ({ onClose, onSuccess }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className={`w-full py-2 px-4 rounded text-white font-medium ${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+            className="button primary wide"
+            style={{ height: '46px', fontSize: '15px' }}
           >
             {loading ? 'Logging in...' : 'Log In'}
           </button>

@@ -58,45 +58,70 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">Admin Dashboard</h1>
+    <div className="container admin-dashboard">
+      <div className="admin-header">
+        <div>
+          <span className="eyebrow">STORE ADMINISTRATION</span>
+          <h1>Admin Dashboard</h1>
+        </div>
+      </div>
       
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Unit' : 'Create New Unit'}</h2>
-        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">{error}</div>}
+      <div className="admin-card">
+        <h2>{editingId ? 'Edit Measurement Unit' : 'Create New Unit'}</h2>
+        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded" style={{ borderRadius: 'var(--radius-md)' }}>{error}</div>}
         
-        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Unit Name</label>
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }}>
+          <div style={{ flex: '1', minWidth: '220px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: '6px' }}>Unit Name</label>
             <input 
               type="text" 
               required
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%',
+                height: '44px',
+                padding: '0 14px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                outline: 0,
+                fontSize: '14px',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)'
+              }}
               placeholder="e.g., Kilogram"
             />
           </div>
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Abbreviation</label>
+          <div style={{ flex: '1', minWidth: '220px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: '6px' }}>Abbreviation</label>
             <input 
               type="text" 
               required
               value={formData.abbreviation}
               onChange={(e) => setFormData({...formData, abbreviation: e.target.value})}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                width: '100%',
+                height: '44px',
+                padding: '0 14px',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                outline: 0,
+                fontSize: '14px',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-primary)'
+              }}
               placeholder="e.g., kg"
             />
           </div>
-          <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
-            <button type="submit" className="flex-1 md:flex-none px-6 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors">
-              {editingId ? 'Update' : 'Create'}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button type="submit" className="button primary">
+              {editingId ? 'Update Unit' : 'Create Unit'}
             </button>
             {editingId && (
               <button 
                 type="button" 
                 onClick={() => { setEditingId(null); setFormData({name: '', abbreviation: ''}); }}
-                className="flex-1 md:flex-none px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded hover:bg-gray-200 transition-colors"
+                className="button secondary"
               >
                 Cancel
               </button>
@@ -105,36 +130,52 @@ const AdminPanel = () => {
         </form>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <h2 className="text-xl font-semibold p-6 border-b bg-gray-50">Manage Units</h2>
+      <div className="admin-card">
+        <h2>Manage Units</h2>
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading units...</div>
+          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading units...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-full">
-              <thead className="bg-gray-50">
+          <div className="table-responsive">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Abbreviation</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Abbreviation</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody>
                 {units.map(unit => (
-                  <tr key={unit.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{unit.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{unit.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{unit.abbreviation}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                      <button onClick={() => handleEdit(unit)} className="text-blue-600 hover:text-blue-900">Edit</button>
-                      <button onClick={() => handleDelete(unit.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                  <tr key={unit.id}>
+                    <td style={{ color: 'var(--color-text-secondary)' }}>{unit.id}</td>
+                    <td style={{ fontWeight: '600' }}>{unit.name}</td>
+                    <td>{unit.abbreviation}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div className="admin-actions" style={{ justifyContent: 'flex-end' }}>
+                        <button 
+                          onClick={() => handleEdit(unit)} 
+                          className="button small ghost"
+                          style={{ color: 'var(--color-primary)', fontWeight: '600' }}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(unit.id)} 
+                          className="button small ghost"
+                          style={{ color: 'var(--color-danger)', fontWeight: '600' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {units.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">No units configured yet.</td>
+                    <td colSpan="4" style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                      No units configured yet.
+                    </td>
                   </tr>
                 )}
               </tbody>
