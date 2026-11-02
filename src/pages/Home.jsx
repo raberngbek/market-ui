@@ -1,347 +1,399 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  ChevronRight,
-  HeartHandshake,
-  Leaf,
-  ShieldCheck,
-  Timer,
-  Truck,
-} from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  Search, 
+  MapPin, 
+  Star, 
+  Clock, 
+  ArrowRight, 
+  Store as StoreIcon, 
+  ShieldCheck, 
+  Timer, 
+  HeartHandshake, 
+  Truck, 
+  CheckCircle2, 
+  Sparkles,
+  ShoppingBag,
+  Grid
+} from 'lucide-react';
+import { stores, storeCategories, products } from '../data/catalog';
+import ProductCard from '../components/ProductCard';
+import Benefit from '../components/Benefit';
 
-// Keep static posts/products as fallback if API doesn't provide them
-import { posts, products as staticProducts, categories as staticCategories } from "../data/catalog";
-import ProductCard from "../components/ProductCard";
-import SectionHeading from "../components/SectionHeading";
-import Benefit from "../components/Benefit";
-import { categoryRouter } from "../api/routers/categories";
-import { marketPlaceRouter } from "../api/routers/marketPlace";
+export default function Home() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Stores');
 
-export default function Home({ variant }) {
-  const meals = variant === "two";
-  
-  const [categoriesData, setCategoriesData] = useState([]);
-  const [marketData, setMarketData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const isStoresDirectory = selectedCategory === 'All Stores';
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [cats, market] = await Promise.all([
-          categoryRouter.list().catch(() => staticCategories),
-          marketPlaceRouter.getHome().catch(() => staticProducts)
-        ]);
-        
-        // Handle different possible payload structures gracefully
-        setCategoriesData(Array.isArray(cats) ? cats : (cats?.data || staticCategories));
-        setMarketData(Array.isArray(market) ? market : (market?.products || market?.data || staticProducts));
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+  // Stores matching current category & search
+  const filteredStores = useMemo(() => {
+    return stores.filter((store) => {
+      const sCat = (store.category || '').toLowerCase();
+      const sel = selectedCategory.toLowerCase();
+      let matchCategory = false;
+
+      if (selectedCategory === 'All Stores') {
+        matchCategory = true;
+      } else if (sel.includes('phone') || sel.includes('tech')) {
+        matchCategory = sCat.includes('phone') || sCat.includes('tech') || store.specialty.toLowerCase().includes('tech') || store.specialty.toLowerCase().includes('phone');
+      } else if (sel.includes('car') || sel.includes('auto')) {
+        matchCategory = sCat.includes('car') || sCat.includes('auto') || store.specialty.toLowerCase().includes('auto') || store.specialty.toLowerCase().includes('car');
+      } else if (sel.includes('fashion') || sel.includes('apparel')) {
+        matchCategory = sCat.includes('fashion') || sCat.includes('apparel') || store.specialty.toLowerCase().includes('streetwear') || store.specialty.toLowerCase().includes('fashion');
+      } else if (sel.includes('home') || sel.includes('living')) {
+        matchCategory = sCat.includes('home') || sCat.includes('living') || store.specialty.toLowerCase().includes('furniture');
+      } else if (sel.includes('beauty') || sel.includes('wellness')) {
+        matchCategory = sCat.includes('beauty') || sCat.includes('wellness') || store.specialty.toLowerCase().includes('skincare');
+      } else if (sel.includes('produce')) {
+        matchCategory = sCat.includes('produce') || store.specialty.toLowerCase().includes('produce') || store.specialty.toLowerCase().includes('fruit');
+      } else if (sel.includes('meal') || sel.includes('prepared')) {
+        matchCategory = sCat.includes('prepared') || store.specialty.toLowerCase().includes('meal') || store.specialty.toLowerCase().includes('deli');
+      } else if (sel.includes('bakery')) {
+        matchCategory = sCat.includes('bakery') || store.specialty.toLowerCase().includes('bread') || store.specialty.toLowerCase().includes('pastries');
+      } else if (sel.includes('seafood')) {
+        matchCategory = sCat.includes('seafood') || store.specialty.toLowerCase().includes('seafood') || store.specialty.toLowerCase().includes('fish');
+      } else if (sel.includes('dairy') || sel.includes('egg')) {
+        matchCategory = sCat.includes('dairy') || store.specialty.toLowerCase().includes('dairy') || store.specialty.toLowerCase().includes('egg');
+      } else if (sel.includes('pantry')) {
+        matchCategory = sCat.includes('pantry') || store.specialty.toLowerCase().includes('olive') || store.specialty.toLowerCase().includes('oil');
+      } else if (sel.includes('drink')) {
+        matchCategory = sCat.includes('drink') || store.specialty.toLowerCase().includes('tonic') || store.specialty.toLowerCase().includes('drink');
+      } else {
+        matchCategory = sCat === sel || store.specialty.toLowerCase().includes(sel);
       }
-    }
-    loadData();
-  }, []);
 
-  const displayCategories = categoriesData.length > 0 ? categoriesData : staticCategories;
-  const displayProducts = marketData.length > 0 ? marketData : staticProducts;
+      const searchStr = `${store.name} ${store.specialty} ${store.category} ${store.location} ${store.about}`.toLowerCase();
+      const matchSearch = !searchQuery.trim() || searchStr.includes(searchQuery.toLowerCase());
 
-  if (loading) {
-    return (
-      <main className="container" style={{ padding: '100px 0', textAlign: 'center' }}>
-        <h2>Loading Marketplace...</h2>
-        <div className="skeleton-loader" style={{ height: '200px', background: '#f0f0f0', marginTop: '20px', borderRadius: '8px' }}></div>
-      </main>
-    );
-  }
+      return matchCategory && matchSearch;
+    });
+  }, [searchQuery, selectedCategory]);
 
-  if (error) {
-    return (
-      <main className="container" style={{ padding: '100px 0', textAlign: 'center' }}>
-        <h2>Something went wrong</h2>
-        <p>Failed to load marketplace data. Please try again later.</p>
-        <button onClick={() => window.location.reload()} className="button primary">Retry</button>
-      </main>
-    );
-  }
+  // Direct products matching the selected category & search
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const pCat = (product.category || '').toLowerCase();
+      const sel = selectedCategory.toLowerCase();
+      let matchCategory = false;
+
+      if (selectedCategory === 'All Stores') {
+        matchCategory = true;
+      } else if (sel.includes('phone') || sel.includes('tech')) {
+        matchCategory = pCat.includes('phone') || pCat.includes('tech') || pCat.includes('gadget');
+      } else if (sel.includes('car') || sel.includes('auto')) {
+        matchCategory = pCat.includes('car') || pCat.includes('auto') || pCat.includes('motor');
+      } else if (sel.includes('fashion') || sel.includes('apparel')) {
+        matchCategory = pCat.includes('fashion') || pCat.includes('apparel') || pCat.includes('clothing') || pCat.includes('shoe');
+      } else if (sel.includes('home') || sel.includes('living')) {
+        matchCategory = pCat.includes('home') || pCat.includes('living') || pCat.includes('furniture');
+      } else if (sel.includes('beauty') || sel.includes('wellness')) {
+        matchCategory = pCat.includes('beauty') || pCat.includes('wellness') || pCat.includes('skin');
+      } else if (sel.includes('produce')) {
+        matchCategory = pCat.includes('produce') || pCat.includes('organic') || pCat.includes('fruit') || pCat.includes('vegetable');
+      } else if (sel.includes('meal') || sel.includes('prepared')) {
+        matchCategory = pCat.includes('ready') || pCat.includes('meal') || pCat.includes('deli');
+      } else if (sel.includes('seafood')) {
+        matchCategory = pCat.includes('seafood') || pCat.includes('meat') || pCat.includes('fish');
+      } else if (sel.includes('dairy') || sel.includes('egg')) {
+        matchCategory = pCat.includes('dairy') || pCat.includes('egg');
+      } else if (sel.includes('bakery')) {
+        matchCategory = pCat.includes('bakery') || pCat.includes('bread');
+      } else if (sel.includes('pantry')) {
+        matchCategory = pCat.includes('pantry') || pCat.includes('oil');
+      } else if (sel.includes('drink')) {
+        matchCategory = pCat.includes('drink') || pCat.includes('water');
+      } else {
+        matchCategory = pCat.includes(sel);
+      }
+
+      const searchStr = `${product.name} ${product.short} ${product.category} ${product.brand} ${product.storeName || ''}`.toLowerCase();
+      const matchSearch = !searchQuery.trim() || searchStr.includes(searchQuery.toLowerCase());
+
+      return matchCategory && matchSearch;
+    });
+  }, [selectedCategory, searchQuery]);
 
   return (
-    <main>
-      <section className={`hero ${meals ? "hero-two" : ""}`}>
-        <div className="container hero-layout">
-          <div className="hero-copy">
-            <span className="eyebrow">
-              {meals ? "DINNER, DELIVERED" : "FROM LOCAL FIELDS"}
-            </span>
-            <h1>
-              {meals ? (
-                <>
-                  Good food. Less
-                  <br />
-                  <em>thinking.</em>
-                </>
-              ) : (
-                <>
-                  Fresh food for
-                  <br />
-                  <em>real life.</em>
-                </>
-              )}
-            </h1>
-            <p>
-              {meals
-                ? "Ready meals, brilliant staples, and the ingredients for a dinner worth sitting down for."
-                : "Hand-picked groceries from local growers, bakers, and makers—at your door in as little as an hour."}
-            </p>
-            <div className="hero-buttons">
-              <Link
-                className="button primary"
-                to={meals ? "/category/Ready%20to%20Eat" : "/shop"}
-              >
-                Shop fresh food <ArrowRight size={18} />
-              </Link>
-              <Link className="text-link hero-link" to="/home-2">
-                Plan dinner
-              </Link>
-            </div>
-            <div className="hero-note">
-              <Leaf size={16} /> Seasonal food, sourced with care
-            </div>
-          </div>
-          <div className="hero-visual">
-            <img
-              src={
-                meals
-                  ? "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1500&q=90"
-                  : "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1500&q=90"
-              }
-              alt={
-                meals
-                  ? "Fresh vegetables ready for dinner"
-                  : "Fresh produce at a market"
-              }
-            />
-            <div className="hero-float-card">
-              <span>{meals ? "DINNER IN 20" : "FRESH THIS MORNING"}</span>
-              <strong>
-                {meals ? "Easy meals, better nights" : "The local harvest"}
-              </strong>
-              <Link to="/shop">
-                Shop now <ChevronRight size={15} />
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="container hero-ticker">
-          <span>Delivery in as little as 60 min</span>
-          <i />
-          <span>Hand-picked for freshness</span>
-          <i />
-          <span>Local makers & growers</span>
-          <i />
-          <span>Easy replacements</span>
-        </div>
-      </section>
-      
-      {/* CATEGORIES INTEGRATION */}
-      <section className="section categories-section">
-        <div className="container">
-          <SectionHeading
-            eyebrow="SHOP THE MARKET"
-            title="What are you hungry for?"
-          />
-          {displayCategories.length === 0 ? (
-             <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '8px' }}>No categories found.</div>
-          ) : (
-            <div className="category-grid">
-              {displayCategories.map((category) => (
-                <Link
-                  className="category-card"
-                  key={category.name || category.id}
-                  to={`/category/${encodeURIComponent(category.name || 'unknown')}`}
-                >
-                  <img loading="lazy" src={category.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80"} alt="" />
-                  <span>
-                    {category.name}
-                    <ArrowRight size={16} />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-      
-      {/* MARKET PLACE HOME INTEGRATION */}
-      <section className="section tint-section">
-        <div className="container">
-          <SectionHeading
-            eyebrow="PICKED THIS MORNING"
-            title="Fresh favorites, ready when you are."
-          />
-          {displayProducts.length === 0 ? (
-             <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '8px' }}>No products found.</div>
-          ) : (
-            <Swiper
-              modules={[Autoplay, Pagination]}
-              autoplay={{ delay: 4200, disableOnInteraction: false }}
-              pagination={{ clickable: true }}
-              spaceBetween={18}
-              slidesPerView={1.25}
-              breakpoints={{
-                540: { slidesPerView: 2.25 },
-                900: { slidesPerView: 3.25 },
-                1180: { slidesPerView: 4 },
-              }}
-              className="product-swiper"
-            >
-              {displayProducts.slice(0, 7).map((product) => (
-                <SwiperSlide key={product.id}>
-                  <ProductCard product={product} />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          )}
-        </div>
-      </section>
-      
-      <section className="split-promo">
-        <div className="promo-photo">
-          <img
-            loading="lazy"
-            src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85"
-            alt="A bowl of warming tomato soup"
-          />
-        </div>
-        <div className="promo-content">
-          <span className="eyebrow">DINNER, SORTED</span>
-          <h2>
-            Less prep. More
+    <main className="stores-directory-page">
+      {/* DIRECTORY HERO */}
+      <section className="directory-hero">
+        <div className="container directory-hero-inner">
+          <span className="eyebrow">ALL-IN-ONE MULTI-STORE MARKETPLACE</span>
+          <h1>
+            Phones, cars, fashion & food,
             <br />
-            <em>good food.</em>
-          </h2>
+            <em>from verified stores in one place.</em>
+          </h1>
           <p>
-            Ready-to-heat meals and a few fresh extras make the best kind of
-            weeknight dinner.
+            Shop directly from independent stores—electronics & 5G phone hubs, automotive specialists, 
+            streetwear boutiques, modern living, and organic farm markets—with unified fast delivery.
           </p>
-          <Link className="button light" to="/category/Ready%20to%20Eat">
-            Shop ready meals <ArrowRight size={18} />
-          </Link>
-          <span className="promo-index">01 / 03</span>
-        </div>
-      </section>
-      <section className="section container">
-        <div className="feature-banner">
-          <div>
-            <span className="eyebrow">WEEKLY FARM BOX</span>
-            <h2>Meet this week’s harvest.</h2>
-            <p>Peak-season produce, chosen by the people who grew it.</p>
-            <Link className="text-link" to="/category/Fresh%20Produce">
-              Shop produce <ArrowRight size={17} />
-            </Link>
+
+          {/* STORE SEARCH & CATEGORY BAR */}
+          <div className="directory-search-box">
+            <div className="search-input-wrap">
+              <Search size={20} className="search-icon" />
+              <input 
+                type="text" 
+                placeholder={isStoresDirectory ? "Search stores, phones, cars, fashion, tech, or groceries..." : `Search ${selectedCategory} products or stores...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search marketplace"
+              />
+              {searchQuery && (
+                <button 
+                  type="button" 
+                  onClick={() => setSearchQuery('')}
+                  className="clear-query-btn"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
-          <img
-            loading="lazy"
-            src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1300&q=85"
-            alt="Colorful fresh vegetables"
-          />
-          <span className="banner-discount">
-            SAVE
-            <br />
-            <b>20%</b>
-            <br />
-            TODAY
-          </span>
-        </div>
-      </section>
-      
-      {/* SECOND MARKET PLACE SECTION */}
-      <section className="section container">
-        <SectionHeading
-          eyebrow="FRESH IN THE BASKET"
-          title="Pantry staples and little luxuries."
-          link="/shop?sort=new"
-          label="See what’s new"
-        />
-        {displayProducts.length > 5 ? (
-          <div className="product-grid">
-            {displayProducts.slice(5, 11).map((product) => (
-              <ProductCard product={product} key={product.id} />
-            ))}
-          </div>
-        ) : (
-          <div style={{ padding: '40px', textAlign: 'center', background: '#f9f9f9', borderRadius: '8px' }}>Check back later for more products.</div>
-        )}
-      </section>
-      
-      <section className="section editorial-section">
-        <div className="container editorial-grid">
-          <div className="editorial-copy">
-            <span className="eyebrow">THE MARKETFRESH TABLE</span>
-            <h2>
-              Recipes for
-              <br />
-              <em>everyday good eating.</em>
-            </h2>
-            <p>
-              Simple ideas from farmers, cooks, and people who think dinner
-              should be a pleasure.
-            </p>
-            <Link className="button outline" to="/blog">
-              Read the recipes <ArrowRight size={18} />
-            </Link>
-          </div>
-          <div className="post-stack">
-            {posts.slice(0, 2).map((post) => (
-              <Link
-                to={`/blog/${post.slug}`}
-                className="mini-post"
-                key={post.slug}
+
+          <div className="directory-categories-bar">
+            {storeCategories.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className={`category-pill ${selectedCategory === category ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(category)}
               >
-                <img loading="lazy" src={post.image} alt="" />
-                <div>
-                  <span>
-                    {post.category} · {post.date}
-                  </span>
-                  <h3>{post.title}</h3>
-                  <b>
-                    Read recipe <ArrowRight size={15} />
-                  </b>
-                </div>
-              </Link>
+                {category}
+              </button>
             ))}
           </div>
         </div>
       </section>
+
+      {/* CONDITIONAL CONTENT: STORES DIRECTORY vs DIRECT PRODUCTS */}
+      <section className="section stores-grid-section">
+        <div className="container">
+          {isStoresDirectory ? (
+            /* ALL STORES DIRECTORY VIEW */
+            <>
+              <div className="directory-results-head">
+                <div>
+                  <span className="eyebrow">NEIGHBORHOOD PRODUCERS</span>
+                  <h2>Registered Stores & Shops</h2>
+                  <p>Explore independent storefronts and their fresh offerings.</p>
+                </div>
+                <div className="stores-counter">
+                  <b>{filteredStores.length}</b> {filteredStores.length === 1 ? 'store' : 'stores'} available
+                </div>
+              </div>
+
+              {filteredStores.length > 0 ? (
+                <div className="stores-grid">
+                  {filteredStores.map((store) => (
+                    <article className="store-card" key={store.id}>
+                      <div className="store-card-banner">
+                        <img 
+                          src={store.banner} 
+                          alt={`${store.name} banner`} 
+                          loading="lazy" 
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80';
+                          }}
+                        />
+                        <div className="store-card-badges">
+                          <span className="store-card-specialty">{store.specialty}</span>
+                          <span className="store-card-delivery">
+                            <Clock size={12} /> {store.deliveryTime}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="store-card-body">
+                        <div className="store-card-header">
+                          <div className="store-card-avatar">
+                            <img src={store.avatar} alt={store.name} />
+                          </div>
+                          <div className="store-card-headline">
+                            <Link to={`/store/${store.id}`} className="store-card-name">
+                              <h3>{store.name}</h3>
+                            </Link>
+                            <div className="store-card-meta">
+                              <span className="store-rating">
+                                <Star size={13} fill="#f3bd44" color="#f3bd44" />
+                                <b>{store.rating}</b>
+                                <small>({store.reviews})</small>
+                              </span>
+                              <span className="meta-dot">·</span>
+                              <span className="store-location">
+                                <MapPin size={13} /> {store.location}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="store-card-about">{store.about}</p>
+
+                        {store.badges && store.badges.length > 0 && (
+                          <div className="store-tags-line">
+                            {store.badges.slice(0, 2).map((b) => (
+                              <span key={b} className="mini-tag">
+                                <CheckCircle2 size={11} /> {b}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="store-card-footer">
+                          <div className="store-min-order">
+                            <small>Min order ${store.minOrder}</small>
+                          </div>
+                          <Link 
+                            to={`/store/${store.id}`} 
+                            className="button primary visit-store-btn"
+                            aria-label={`Visit ${store.name}`}
+                          >
+                            Visit Store <ArrowRight size={15} />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="directory-empty-state">
+                  <StoreIcon size={46} />
+                  <h3>No stores match your search</h3>
+                  <p>We couldn't find any stores matching "{searchQuery}". Try clearing your search.</p>
+                  <button 
+                    type="button" 
+                    className="button outline"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            /* DIRECT PRODUCTS VIEW (FOR SELECTED PRODUCT CATEGORY) */
+            <>
+              {/* MATCHING STORES STRIP FOR THIS CATEGORY */}
+              {filteredStores.length > 0 && (
+                <div className="category-stores-bar">
+                  <div className="category-stores-header">
+                    <span className="eyebrow">LOCAL SHOPS FOR {selectedCategory.toUpperCase()}</span>
+                    <small>Visit full store catalogs</small>
+                  </div>
+                  <div className="category-stores-scroll">
+                    {filteredStores.map((s) => (
+                      <Link key={s.id} to={`/store/${s.id}`} className="category-store-chip">
+                        <img src={s.avatar} alt={s.name} />
+                        <div>
+                          <strong>{s.name}</strong>
+                          <small><Star size={11} fill="#f3bd44" color="#f3bd44" /> {s.rating} · {s.location}</small>
+                        </div>
+                        <span className="visit-arrow">Visit Store →</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* DIRECT PRODUCTS HEADER */}
+              <div className="directory-results-head">
+                <div>
+                  <span className="eyebrow">DIRECT FROM LOCAL STORES</span>
+                  <h2>{selectedCategory} Products</h2>
+                  <p>
+                    Showing fresh products from verified local stores. Each product displays the store in its title.
+                  </p>
+                </div>
+                <div className="stores-counter">
+                  <b>{filteredProducts.length}</b> {filteredProducts.length === 1 ? 'product' : 'products'} available
+                </div>
+              </div>
+
+              {/* DIRECT PRODUCTS GRID WITH STORE IN TITLE */}
+              {filteredProducts.length > 0 ? (
+                <div className="product-grid" style={{ marginBottom: '40px' }}>
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <div className="directory-empty-state">
+                  <ShoppingBag size={46} />
+                  <h3>No products found for {selectedCategory}</h3>
+                  <p>Try clearing your search query or selecting another category.</p>
+                  <button 
+                    type="button" 
+                    className="button outline"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('All Stores');
+                    }}
+                  >
+                    View All Stores
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* BECOME A SELLER CALL TO ACTION BANNER */}
+      <section className="seller-cta-section container">
+        <div className="seller-cta-banner">
+          <div className="seller-cta-content">
+            <span className="seller-cta-badge">
+              <Sparkles size={14} /> Open Your Online Shop
+            </span>
+            <h2>Want to open your own store? Become a seller</h2>
+            <p>
+              Join hundreds of local farms, bakeries, fisheries, and specialty food producers. 
+              We handle local cold-chain delivery logistics and payment processing so you can focus on what you grow and make.
+            </p>
+            <div className="seller-cta-perks">
+              <span><CheckCircle2 size={16} /> Zero upfront setup fees</span>
+              <span><CheckCircle2 size={16} /> Direct weekly payouts</span>
+              <span><CheckCircle2 size={16} /> Fast customer local delivery</span>
+            </div>
+            <Link to="/vendor/register" className="button primary seller-apply-btn">
+              Apply to Open a Store <ArrowRight size={17} />
+            </Link>
+          </div>
+          <div className="seller-cta-visual">
+            <img 
+              src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=85" 
+              alt="Farmer selling fresh food" 
+              loading="lazy" 
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* PLATFORM BENEFITS ASSURANCE */}
       <section className="benefit-section">
         <div className="container benefits">
           <Benefit
             icon={Timer}
-            title="Delivery in 60 minutes"
-            text="Choose a time that suits you"
+            title="Fast Express Delivery"
+            text="Same-day local dispatch & express freight"
           />
           <Benefit
             icon={ShieldCheck}
-            title="Freshness promise"
-            text="We make it right, every time"
+            title="100% Verified Stores"
+            text="Authorized tech dealers & certified shops"
           />
           <Benefit
             icon={HeartHandshake}
-            title="Easy replacements"
-            text="You approve every swap"
+            title="Support Independent Shops"
+            text="Direct sales with guaranteed buyer protection"
           />
           <Benefit
             icon={Truck}
-            title="Local delivery"
-            text="From nearby food makers"
+            title="Consolidated Cart"
+            text="Combine phones, cars, fashion & food in 1 checkout"
           />
         </div>
       </section>

@@ -24,7 +24,14 @@ export default function ProductCard({ product }) {
     <article className="product-card">
       <div className="product-image">
         <Link to={`/product/${productId}`}>
-          <img loading="lazy" src={product?.image || ''} alt={product?.name || 'Product'} />
+          <img 
+            loading="lazy" 
+            src={product?.image || ''} 
+            alt={product?.name || 'Product'} 
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+            }}
+          />
         </Link>
         {product?.badge && <span className="product-badge">{product.badge}</span>}
         <div className="product-actions">
@@ -43,9 +50,19 @@ export default function ProductCard({ product }) {
         </button>
       </div>
       <div className="product-copy">
-        <span className="product-category">{product?.brand || ''}</span>
+        <span className="product-category">
+          <Link to={`/store/${product?.storeId || ''}`} className="store-pill-link">
+            {product?.storeName || product?.brand || 'Local Store'}
+          </Link>
+          {product?.category && ` · ${product.category}`}
+        </span>
         <Link to={`/product/${productId}`}>
-          <h3>{product?.name || ''}</h3>
+          <h3 title={`${product?.storeName || product?.brand || ''} · ${product?.name || ''}`}>
+            <span className="product-store-title">
+              {product?.storeName || product?.brand ? `${product.storeName || product.brand} · ` : ''}
+            </span>
+            {product?.name || ''}
+          </h3>
         </Link>
         <Rating value={product?.rating ?? 0} reviews={product?.reviews ?? 0} />
         <div className="price">
@@ -62,8 +79,15 @@ export default function ProductCard({ product }) {
             </button>
             <img src={product?.image || ''} alt="" />
             <div>
-              <span className="product-category">{product?.category || ''} · {product?.brand || ''}</span>
-              <h2>{product?.name || ''}</h2>
+              <span className="product-category">
+                Store: <Link to={`/store/${product?.storeId || ''}`}>{product?.storeName || product?.brand}</Link> · {product?.category || ''}
+              </span>
+              <h2>
+                <span className="product-store-title">
+                  {product?.storeName || product?.brand ? `${product.storeName || product.brand} · ` : ''}
+                </span>
+                {product?.name || ''}
+              </h2>
               <Rating value={product?.rating ?? 0} reviews={product?.reviews ?? 0} />
               <div className="price">
                 <strong>{money(product?.price)}</strong>

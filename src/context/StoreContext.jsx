@@ -26,11 +26,16 @@ export function StoreProvider({ children }) {
   };
   const addToCart = (product, quantity = 1, options = {}) => {
     const key = `${product.id}-${options.color || 'default'}`;
+    const storeId = product.storeId || (product.brand ? product.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'local-store');
+    const storeName = product.storeName || product.brand || 'Local Store';
     setCart((items) => {
       const found = items.find((item) => item.key === key);
-      return found ? items.map((item) => item.key === key ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock) } : item) : [...items, { ...product, key, quantity, options }];
+      return found
+        ? items.map((item) => item.key === key ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock || 99) } : item)
+        : [...items, { ...product, storeId, storeName, key, quantity, options }];
     });
-    setCartOpen(true); notify(`${product.short} added to cart`);
+    setCartOpen(true);
+    notify(`${product.short} added to cart`);
   };
   const updateQty = (key, quantity) => setCart((items) => items.map((item) => item.key === key ? { ...item, quantity: Math.max(1, Math.min(quantity, item.stock)) } : item));
   const removeCart = (key) => { setCart((items) => items.filter((item) => item.key !== key)); notify('Removed from your cart'); };

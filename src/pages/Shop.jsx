@@ -8,10 +8,23 @@ import FilterGroup from '../components/FilterGroup';
 import { money } from '../utils/money';
 import { api } from '../api';
 
-const brands = ['Good Earth Farm', 'Kitchen Kind', 'Berry & Co.', 'Harbor Catch', 'Early Bird Bakery', 'Olive Grove'];
+const brands = [
+  'Nova Tech',
+  'Volt Gadget Lab',
+  'Apex Motors',
+  'Cruiser Auto',
+  'Urban Thread',
+  'Haven Living',
+  'Aura Botanica',
+  'Good Earth Farm',
+  'Kitchen Kind',
+  'Berry & Co.',
+  'Harbor Catch',
+  'Early Bird Bakery'
+];
 
 function FilterContent({ filters, setFilters, close, productsList = [] }) {
-  const currentFilters = filters || { category: '', brand: '', rating: 0, inStock: false, maxPrice: 50 };
+  const currentFilters = filters || { category: '', brand: '', rating: 0, inStock: false, maxPrice: 1200 };
   const safeProducts = Array.isArray(productsList) ? productsList : [];
 
   const select = (key, value) => {
@@ -26,7 +39,7 @@ function FilterContent({ filters, setFilters, close, productsList = [] }) {
     <div className="filters">
       <div className="filter-head">
         <strong>Filters</strong>
-        <button onClick={() => setFilters?.({ category: '', brand: '', rating: 0, inStock: false, maxPrice: 50 })}>
+        <button onClick={() => setFilters?.({ category: '', brand: '', rating: 0, inStock: false, maxPrice: 1200 })}>
           Clear all
         </button>
         {close && (
@@ -35,8 +48,21 @@ function FilterContent({ filters, setFilters, close, productsList = [] }) {
           </button>
         )}
       </div>
-      <FilterGroup title="Food aisle">
-        {['Fresh Produce', 'Ready to Eat', 'Meat & Seafood', 'Dairy & Eggs', 'Bakery'].map((item) => (
+      <FilterGroup title="Department">
+        {[
+          'Phones & Tech',
+          'Cars & Auto',
+          'Fashion & Apparel',
+          'Home & Living',
+          'Beauty & Wellness',
+          'Fresh Produce',
+          'Ready to Eat',
+          'Meat & Seafood',
+          'Dairy & Eggs',
+          'Bakery',
+          'Pantry',
+          'Drinks'
+        ].map((item) => (
           <label key={item}>
             <input
               type="radio"
@@ -49,24 +75,24 @@ function FilterContent({ filters, setFilters, close, productsList = [] }) {
           </label>
         ))}
       </FilterGroup>
-      <FilterGroup title={`Price · under ${money(currentFilters?.maxPrice ?? 50)}`}>
+      <FilterGroup title={`Price · under ${money(currentFilters?.maxPrice ?? 1200)}`}>
         <input
           className="range"
           type="range"
-          min="3"
-          max="50"
-          step="1"
-          value={currentFilters?.maxPrice ?? 50}
+          min="4"
+          max="1200"
+          step="10"
+          value={currentFilters?.maxPrice ?? 1200}
           onChange={(e) =>
             setFilters?.((current) => ({ ...(current || {}), maxPrice: Number(e.target.value) }))
           }
         />
         <div className="range-labels">
-          <span>$3</span>
-          <span>{money(currentFilters?.maxPrice ?? 50)}</span>
+          <span>$4</span>
+          <span>{money(currentFilters?.maxPrice ?? 1200)}</span>
         </div>
       </FilterGroup>
-      <FilterGroup title="Producer">
+      <FilterGroup title="Store / Brand">
         {brands.map((item) => (
           <label key={item}>
             <input
@@ -123,7 +149,7 @@ export default function Shop({ search, deals }) {
     brand: '',
     rating: 0,
     inStock: false,
-    maxPrice: 50,
+    maxPrice: 1200,
   });
   const [sort, setSort] = useState((location?.search || '').includes('sort=new') ? 'new' : 'popular');
   const [grid, setGrid] = useState(true);
@@ -176,7 +202,7 @@ export default function Shop({ search, deals }) {
       if (!product) return false;
       const categoryMatch = !filters?.category || product?.category === filters?.category;
       const brandMatch = !filters?.brand || product?.brand === filters?.brand;
-      const priceMatch = (product?.price ?? 0) <= (filters?.maxPrice ?? 50);
+      const priceMatch = (product?.price ?? 0) <= (filters?.maxPrice ?? 1200);
       const ratingMatch = (product?.rating ?? 0) >= (filters?.rating ?? 0);
       const stockMatch = !filters?.inStock || (product?.stock ?? 0) > 0;
       const searchStr = `${product?.name || ''} ${product?.category || ''} ${product?.brand || ''}`.toLowerCase();
@@ -297,7 +323,7 @@ export default function Shop({ search, deals }) {
                 <p>Try widening your price range or clearing a filter.</p>
                 <button
                   className="button outline"
-                  onClick={() => setFilters({ category: '', brand: '', rating: 0, inStock: false, maxPrice: 50 })}
+                  onClick={() => setFilters({ category: '', brand: '', rating: 0, inStock: false, maxPrice: 1200 })}
                 >
                   Clear filters
                 </button>
@@ -352,7 +378,12 @@ function ListProduct({ product }) {
           {product?.category || ''} · {product?.brand || ''}
         </span>
         <Link to={`/product/${productId}`}>
-          <h2>{product?.name || ''}</h2>
+          <h2>
+            <span className="product-store-title">
+              {product?.storeName || product?.brand ? `${product.storeName || product.brand} · ` : ''}
+            </span>
+            {product?.name || ''}
+          </h2>
         </Link>
         <span className="rating">
           <Star size={14} fill="currentColor" /> {product?.rating ?? 0}{' '}
