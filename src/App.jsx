@@ -368,10 +368,10 @@ function Footer() {
     <footer className="site-footer">
       <section className="newsletter">
         <div className="container newsletter-inner">
-          <div>
-            <span className="eyebrow">THE MARKETFRESH TABLE</span>
-            <h2>Fresh ideas, in your inbox.</h2>
-            <p>Seasonal store spotlights, local grower stories, and $10 off your first delivery.</p>
+          <div className="newsletter-copy">
+            <span className="eyebrow">MARKETPLACE UPDATES & DEALS</span>
+            <h2>Fresh ideas & deals, in your inbox.</h2>
+            <p>Seasonal store spotlights, new tech & fashion drops, and $10 off your first delivery.</p>
           </div>
           <NewsletterForm />
         </div>
