@@ -236,18 +236,18 @@ export default function Shop({ search, deals }) {
         <div className="shop-title">
           <div>
             <span className="eyebrow">
-              {search ? 'SEARCH RESULTS' : deals ? 'FRESH SAVINGS THIS WEEK' : 'FRESH FOOD, LOCAL FLAVOR'}
+              {search ? 'SEARCH RESULTS' : deals ? 'SPECIAL OFFERS & PROMOTIONS' : 'MARKETPLACE DIRECTORY'}
             </span>
             <h1>{title}</h1>
             <p>
               {search
-                ? `${safeSorted.length} food picks found`
-                : 'Groceries and ready-to-eat favorites, selected from producers we trust.'}
+                ? `${safeSorted.length} items found`
+                : 'Explore authentic products across tech, automotive, fashion, home, groceries, and more.'}
             </p>
           </div>
           {deals && (
             <div className="deal-countdown">
-              <small>FRESH DEAL ENDS IN</small>
+              <small>SPECIAL OFFER ENDS IN</small>
               <b>11 : 42 : 08</b>
             </div>
           )}
@@ -267,7 +267,7 @@ export default function Shop({ search, deals }) {
           <section className="shop-results">
             <div className="listing-controls">
               <span>
-                <b>{safeSorted.length}</b> fresh picks
+                <b>{safeSorted.length}</b> items found
               </span>
               <div>
                 <button className="mobile-filter" onClick={() => setDrawer(true)}>
@@ -356,7 +356,7 @@ export default function Shop({ search, deals }) {
             close={() => setDrawer(false)}
           />
           <button className="button primary wide" onClick={() => setDrawer(false)}>
-            Show {safeSorted.length} fresh picks
+            Show {safeSorted.length} results
           </button>
         </div>
         <button className="drawer-backdrop" onClick={() => setDrawer(false)} aria-label="Close filters" />
@@ -389,13 +389,13 @@ function ListProduct({ product }) {
           <Star size={14} fill="currentColor" /> {product?.rating ?? 0}{' '}
           <small>({product?.reviews ?? 0} reviews)</small>
         </span>
-        <p>Selected for peak freshness and hand-picked shortly before your delivery window.</p>
+        <p>Selected for verified quality and backed by MarketFresh marketplace buyer protection.</p>
         <div className="price">
           <strong>{money(product?.price)}</strong>
           {product?.oldPrice && <del>{money(product.oldPrice)}</del>}
         </div>
         <Link className="button outline small" to={`/product/${productId}`}>
-          Choose delivery
+          View Details
         </Link>
       </div>
     </article>
