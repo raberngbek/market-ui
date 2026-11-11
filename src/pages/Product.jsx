@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Check, Heart, Minus, Plus, RotateCcw, ShieldCheck, ShoppingBag, Truck, ZoomIn } from 'lucide-react';
-import { products, stores } from '../data/catalog';
+import { Check, Heart, Minus, Plus, RotateCcw, ShieldCheck, ShoppingBag, Truck, ZoomIn, AlertCircle, RefreshCw } from 'lucide-react';
+import { products as mockProducts, stores as mockStores } from '../data/catalog';
+import { getMarketplaceProductById, normalizeProduct } from '../api/marketplace';
 import { useStore } from '../context/StoreContext';
 import { money } from '../utils/money';
 import ProductCard from '../components/ProductCard';
 import Rating from '../components/Rating';
 import Breadcrumb from '../components/Breadcrumb';
 
-function Quantity({ value, setValue, stock }) {
+function Quantity({ value, setValue, stock = 50 }) {
+  const maxStock = Math.max(1, stock);
   return (
     <div className="quantity-control large">
-      <button disabled={value <= 1} onClick={() => setValue(value - 1)} aria-label="Decrease quantity">
+      <button disabled={value <= 1} onClick={() => setValue(Math.max(1, value - 1))} aria-label="Decrease quantity">
         <Minus size={16} />
       </button>
       <span>{value}</span>
-      <button disabled={value >= stock} onClick={() => setValue(value + 1)} aria-label="Increase quantity">
+      <button disabled={value >= maxStock} onClick={() => setValue(Math.min(maxStock, value + 1))} aria-label="Increase quantity">
         <Plus size={16} />
       </button>
     </div>
@@ -24,6 +26,8 @@ function Quantity({ value, setValue, stock }) {
 
 function DetailsTabs({ product, store }) {
   const [tab, setTab] = useState('description');
+  const codeSuffix = String(product?.id || '').slice(0, 5).toUpperCase() || 'PROD';
+
   return (
     <section id="reviews" className="details-tabs">
       <div role="tablist">
@@ -31,7 +35,7 @@ function DetailsTabs({ product, store }) {
           ['description', 'Description'],
           ['specs', 'Specifications'],
           ['shipping', 'Shipping & Delivery'],
-          ['reviews', `Reviews (${product.reviews})`]
+          ['reviews', `Reviews (${product?.reviews ?? 18})`]
         ].map(([key, label]) => (
           <button
             role="tab"
@@ -48,38 +52,38 @@ function DetailsTabs({ product, store }) {
         <div className="tab-content">
           <h2>Product Overview</h2>
           <p>
-            {product.description || `${product.name} from ${product.storeName || product.brand || store?.name} is verified for quality, authenticity, and premium performance.`}
+            {product?.description || `${product?.name} from ${product?.storeName || store?.name || 'verified seller'} is verified for authentic quality and reliable freshness.`}
           </p>
           <ul>
-            <li>Direct from verified merchant: {product.storeName || product.brand || store?.name}</li>
-            <li>Original packaging with verified serials and documentation</li>
-            <li>Inspected before dispatch for complete quality assurance</li>
+            <li>Direct from verified merchant: {product?.storeName || store?.name || 'Shopify'}</li>
+            <li>Properly handled and inspected before dispatch</li>
+            <li>Backed by MarketFresh satisfaction and authenticity promise</li>
           </ul>
         </div>
       )}
       {tab === 'specs' && (
         <div className="spec-grid">
-          <span>Store / Merchant<b>{product.storeName || product.brand || store?.name}</b></span>
-          <span>Department<b>{product.category}</b></span>
-          <span>Availability<b>{product.stock} in stock</b></span>
-          <span>Item code<b>MF-{product.id.slice(0, 5).toUpperCase()}</b></span>
+          <span>Store / Merchant<b>{product?.storeName || store?.name || 'Shopify'}</b></span>
+          <span>Department<b>{product?.category || 'General'}</b></span>
+          <span>Availability<b>{product?.stock ?? 50} in stock</b></span>
+          <span>Item code<b>MF-{codeSuffix}</b></span>
         </div>
       )}
       {tab === 'shipping' && (
         <div className="tab-content">
           <h2>Fast & Tracked Delivery</h2>
           <p>
-            Orders are fulfilled directly by {product.storeName || 'the verified merchant'} with fast dispatch and end-to-end tracking. Eligible for combined consolidated delivery at checkout.
+            Orders are fulfilled directly by {product?.storeName || store?.name || 'the verified merchant'} with rapid dispatch and real-time tracking. Eligible for combined consolidated delivery at checkout.
           </p>
         </div>
       )}
       {tab === 'reviews' && (
         <div className="reviews">
-          <Rating value={product.rating} />
+          <Rating value={product?.rating ?? 4.9} />
           <h2>Customer Feedback</h2>
           <article>
-            <b>“Exactly as described and arrived fast.”</b>
-            <p>Authentic quality, solid packaging, and great communication from {product.storeName || 'the seller'}.</p>
+            <b>“Exactly as described and arrived fresh.”</b>
+            <p>Authentic quality, solid packaging, and great communication from {product?.storeName || store?.name || 'the seller'}.</p>
             <small>— Jamie L. · Verified Buyer</small>
           </article>
           <article>
@@ -95,49 +99,141 @@ function DetailsTabs({ product, store }) {
 
 export default function Product() {
   const { id, layout } = useParams();
-  const product = products.find((item) => item.id === id) || products[0];
-  const [activeImage, setActiveImage] = useState(product?.gallery?.[0]);
-  const [option, setOption] = useState(product?.colors?.[0]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [activeImage, setActiveImage] = useState('');
+  const [option, setOption] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [zoom, setZoom] = useState(false);
   const { addToCart, toggleList, wishlist } = useStore();
 
-  const store = useMemo(() => {
-    if (!product) return null;
-    return (
-      stores.find((s) => s.id === product.storeId) || {
-        id: product.storeId || 'good-earth-farm',
-        name: product.storeName || product.brand || 'Local Producer',
-        specialty: 'Independent Local Store',
-        about: 'Fresh seasonal staples direct from verified neighborhood growers and makers.',
-        rating: product.rating || 4.9,
-        reviews: product.reviews || 100,
-        avatar: product.image
+  const loadProduct = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check mock catalog first
+      const foundInMock = mockProducts.find((item) => String(item.id) === String(id));
+      if (foundInMock) {
+        const normalized = normalizeProduct(foundInMock);
+        setProduct(normalized);
+        setActiveImage(normalized.gallery?.[0] || normalized.image);
+        setOption(normalized.colors?.[0] || 'Default');
+        return;
       }
-    );
-  }, [product]);
+
+      // Fetch from API
+      const apiItem = await getMarketplaceProductById(id);
+      if (apiItem) {
+        const normalized = normalizeProduct(apiItem);
+        setProduct(normalized);
+        setActiveImage(normalized.gallery?.[0] || normalized.image);
+        setOption(normalized.colors?.[0] || 'Default');
+        return;
+      }
+
+      // Fallback
+      if (mockProducts.length > 0) {
+        const fallback = normalizeProduct(mockProducts[0]);
+        setProduct(fallback);
+        setActiveImage(fallback.gallery?.[0] || fallback.image);
+        setOption(fallback.colors?.[0] || 'Default');
+      } else {
+        setProduct(null);
+      }
+    } catch (err) {
+      console.error('Failed to load product:', err);
+      // Fallback to first mock product if available to ensure shopping continuity
+      if (mockProducts.length > 0) {
+        const fallback = normalizeProduct(mockProducts[0]);
+        setProduct(fallback);
+        setActiveImage(fallback.gallery?.[0] || fallback.image);
+      } else {
+        setError(err?.message || 'Failed to load product details.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (product) {
-      setActiveImage(product.gallery?.[0]);
-      setOption(product.colors?.[0]);
-      setQuantity(1);
-    }
-  }, [id, product]);
+    loadProduct();
+  }, [id]);
+
+  const store = useMemo(() => {
+    if (!product) return null;
+    const foundStore = mockStores.find((s) => String(s.id) === String(product.storeId));
+    if (foundStore) return foundStore;
+
+    return {
+      id: product.storeId || 2,
+      slug: product.storeSlug || 'MAIN',
+      name: product.storeName || 'Shopify',
+      specialty: 'Verified Independent Store',
+      about: 'Quality products direct from verified neighborhood growers and makers.',
+      rating: product.rating || 4.9,
+      reviews: product.reviews || 100,
+      avatar: product.image,
+    };
+  }, [product]);
+
+  if (loading && !product) {
+    return (
+      <div className="container" style={{ padding: '100px 0', textAlign: 'center' }}>
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-600 border-t-transparent mb-4"></div>
+        <p className="text-gray-600 font-medium">Loading product details...</p>
+      </div>
+    );
+  }
+
+  if (error && !product) {
+    return (
+      <div className="container" style={{ padding: '80px 0', textAlign: 'center' }}>
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-lg mx-auto shadow-sm">
+          <AlertCircle size={44} className="text-red-500 mx-auto mb-3" />
+          <h2 className="text-xl font-bold text-red-900 mb-2">Product Not Found</h2>
+          <p className="text-red-700 text-sm mb-6">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <button type="button" className="button primary" onClick={loadProduct}>
+              <RefreshCw size={15} /> Try Again
+            </button>
+            <Link to="/" className="button outline">
+              Browse Stores
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>
         <h2>Product not found</h2>
+        <Link to="/" className="button primary" style={{ marginTop: '1rem' }}>
+          Back to Stores Directory
+        </Link>
       </div>
     );
   }
 
-  const saved = wishlist.some((item) => item.id === product.id);
-  const related = useMemo(
-    () => products.filter((item) => item.category === product.category && item.id !== product.id).slice(0, 4),
-    [product]
-  );
+  const saved = wishlist.some((item) => String(item.id) === String(product.id));
+  const gallery = (Array.isArray(product.gallery) && product.gallery.length > 0) 
+    ? product.gallery 
+    : [product.image];
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const stock = product.stock || product.stockQuantity || 50;
+  const storeLink = product.storeSlug 
+    ? `/vendor/${product.storeSlug}` 
+    : (product.storeId ? `/store/${product.storeId}` : '/');
+
+  const related = mockProducts
+    .filter((item) => item.category === product.category && String(item.id) !== String(product.id))
+    .slice(0, 4)
+    .map(normalizeProduct);
 
   return (
     <main className={`product-page layout-${layout || '1'}`}>
@@ -146,33 +242,39 @@ export default function Product() {
         <div className="detail-layout">
           <section className="product-gallery">
             <div className="thumbs">
-              {product.gallery.map((image, index) => (
+              {gallery.map((img, index) => (
                 <button
-                  key={image}
-                  className={activeImage === image ? 'active' : ''}
-                  onClick={() => setActiveImage(image)}
+                  key={`${img}-${index}`}
+                  className={activeImage === img ? 'active' : ''}
+                  onClick={() => setActiveImage(img)}
                   aria-label={`View image ${index + 1}`}
                 >
-                  <img src={image} alt="" />
+                  <img src={img} alt="" onError={(e) => { e.currentTarget.src = product.image; }} />
                 </button>
               ))}
             </div>
             <div className="main-product-image">
-              <img src={activeImage} alt={product.name} />
+              <img 
+                src={activeImage || product.image} 
+                alt={product.name} 
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+                }}
+              />
               <button className="zoom-button" onClick={() => setZoom(true)} aria-label="Zoom image">
                 <ZoomIn size={20} />
               </button>
               {product.badge && <span className="product-badge">{product.badge}</span>}
             </div>
             {layout === '2' &&
-              product.gallery.slice(1).map((image) => (
+              gallery.slice(1).map((img, idx) => (
                 <button
-                  key={image}
+                  key={`extra-${img}-${idx}`}
                   className="gallery-extra"
-                  onClick={() => setActiveImage(image)}
+                  onClick={() => setActiveImage(img)}
                   aria-label="View gallery image"
                 >
-                  <img src={image} alt="" />
+                  <img src={img} alt="" />
                 </button>
               ))}
           </section>
@@ -180,13 +282,13 @@ export default function Product() {
           <section className="product-info">
             <span className="product-category">
               {product.category} · Sourced from{' '}
-              <Link to={`/store/${product.storeId || store?.id || ''}`} className="store-pill-link">
-                {product.storeName || product.brand || store?.name}
+              <Link to={storeLink} className="store-pill-link">
+                {product.storeName || store?.name}
               </Link>
             </span>
             <h1>
               <span className="product-store-title">
-                {product.storeName || product.brand ? `${product.storeName || product.brand} · ` : ''}
+                {product.storeName ? `${product.storeName} · ` : ''}
               </span>
               {product.name}
             </h1>
@@ -198,22 +300,22 @@ export default function Product() {
               <span>Verified Merchant</span>
             </div>
             <div className="detail-price">
-              <strong>{money(product.price)}</strong>
+              <strong>{money(product.price, product.currencyCode)}</strong>
               {product.oldPrice && (
                 <>
-                  <del>{money(product.oldPrice)}</del>
-                  <span>Save {money(product.oldPrice - product.price)}</span>
+                  <del>{money(product.oldPrice, product.currencyCode)}</del>
+                  <span>Save {money(product.oldPrice - product.price, product.currencyCode)}</span>
                 </>
               )}
             </div>
             <p className="product-intro">
-              {product.about || `Genuine item from ${product.storeName || product.brand || 'verified seller'}, inspected for quality and backed by MarketFresh marketplace buyer protection.`}
+              {product.description || `Genuine item from ${product.storeName}, inspected for quality and backed by MarketFresh marketplace buyer protection.`}
             </p>
             <div className="stock-note">
               <span>
                 <Check size={14} /> In Stock & Ready to Ship
               </span>
-              <span>{product.stock} units available</span>
+              <span>{stock} units available</span>
             </div>
             <div className="flash-box">
               <span>MARKETPLACE SPECIAL</span>
@@ -222,24 +324,26 @@ export default function Product() {
                 Use code <b>FRESH10</b> at checkout
               </small>
             </div>
-            <div className="variants">
-              <div>
-                <b>Options:</b> <span>Standard Edition</span>
+            {colors.length > 0 && (
+              <div className="variants">
+                <div>
+                  <b>Options:</b> <span>Standard Edition</span>
+                </div>
+                <div className="color-options">
+                  {colors.map((choice) => (
+                    <button
+                      key={choice}
+                      aria-label="Select product option"
+                      className={option === choice ? 'active' : ''}
+                      style={{ backgroundColor: choice }}
+                      onClick={() => setOption(choice)}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="color-options">
-                {product.colors.map((choice) => (
-                  <button
-                    key={choice}
-                    aria-label="Select product option"
-                    className={option === choice ? 'active' : ''}
-                    style={{ backgroundColor: choice }}
-                    onClick={() => setOption(choice)}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
             <div className="purchase-actions">
-              <Quantity value={quantity} setValue={setQuantity} stock={product.stock} />
+              <Quantity value={quantity} setValue={setQuantity} stock={stock} />
               <button
                 className="button primary add-main"
                 onClick={() => addToCart(product, quantity, { option })}
@@ -310,28 +414,30 @@ export default function Product() {
                 <b>{store.reviews}+</b> verified reviews
               </span>
             </div>
-            <Link className="button outline small" to={`/store/${product.storeId || store.id}`}>
+            <Link className="button outline small" to={storeLink}>
               Visit Store Catalog →
             </Link>
           </section>
         )}
 
-        <section className="related-section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">RECOMMENDED FOR YOU</span>
-              <h2>More in {product.category}</h2>
+        {related.length > 0 && (
+          <section className="related-section">
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">RECOMMENDED FOR YOU</span>
+                <h2>More in {product.category}</h2>
+              </div>
+              <Link className="text-link" to={`/category/${encodeURIComponent(product.category)}`}>
+                Explore category →
+              </Link>
             </div>
-            <Link className="text-link" to={`/category/${encodeURIComponent(product.category)}`}>
-              Explore category →
-            </Link>
-          </div>
-          <div className="product-grid">
-            {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
-          </div>
-        </section>
+            <div className="product-grid">
+              {related.map((item) => (
+                <ProductCard key={item.id} product={item} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="sticky-product-bar">
@@ -339,7 +445,7 @@ export default function Product() {
           <img src={product.image} alt="" />
           <span>
             {product.short}
-            <b>{money(product.price)}</b>
+            <b>{money(product.price, product.currencyCode)}</b>
           </span>
         </div>
         <button className="button primary" onClick={() => addToCart(product, quantity, { option })}>
@@ -352,7 +458,7 @@ export default function Product() {
           <button onClick={() => setZoom(false)} className="icon-button" aria-label="Close zoom">
             ×
           </button>
-          <img src={activeImage} alt={product.name} />
+          <img src={activeImage || product.image} alt={product.name} />
         </div>
       )}
     </main>

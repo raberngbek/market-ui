@@ -104,10 +104,13 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = typeof localStorage !== 'undefined' 
-    ? (localStorage.getItem('token') || localStorage.getItem(STORAGE_KEYS.token))
+    ? (localStorage.getItem('token') || localStorage.getItem('jwt') || localStorage.getItem(STORAGE_KEYS.token))
     : null;
-  if (token) {
+  if (token && !config.headers.Authorization && !config.headers['Authorization']) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.baseURL?.replace(/\/$/, '').endsWith('/api') && config.url?.startsWith('/api/')) {
+    config.url = config.url.replace(/^\/api/, '');
   }
   return config;
 });

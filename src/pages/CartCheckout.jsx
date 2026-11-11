@@ -11,6 +11,7 @@ function Summary({ coupon, setCoupon }) {
   const { cart, totals } = useStore();
   const [couponValue, setCouponValue] = useState('');
   const [couponState, setCouponState] = useState(coupon || '');
+  const currencyCode = totals.currencyCode || cart[0]?.currencyCode || 'USD';
   const discount = couponState === 'FRESH10' ? totals.subtotal * 0.1 : 0;
 
   const apply = () => {
@@ -32,7 +33,7 @@ function Summary({ coupon, setCoupon }) {
               {item.short}
               <small>Qty {item.quantity} · {item.storeName || item.brand}</small>
             </span>
-            <b>{money(item.price * item.quantity)}</b>
+            <b>{money(item.price * item.quantity, item.currencyCode || currencyCode)}</b>
           </div>
         ))}
       </div>
@@ -51,21 +52,21 @@ function Summary({ coupon, setCoupon }) {
       )}
       <div className="summary-lines">
         <span>
-          Subtotal <b>{money(totals.subtotal)}</b>
+          Subtotal <b>{money(totals.subtotal, currencyCode)}</b>
         </span>
         {discount > 0 && (
           <span>
-            Discount <b>−{money(discount)}</b>
+            Discount <b>−{money(discount, currencyCode)}</b>
           </span>
         )}
         <span>
-          Shipping & Delivery <b>{totals.shipping ? money(totals.shipping) : 'Free'}</b>
+          Shipping & Delivery <b>{totals.shipping ? money(totals.shipping, currencyCode) : 'Free'}</b>
         </span>
         <span>
-          Estimated tax <b>{money(totals.tax)}</b>
+          Estimated tax <b>{money(totals.tax, currencyCode)}</b>
         </span>
         <strong>
-          Total <b>{money(total)}</b>
+          Total <b>{money(total, currencyCode)}</b>
         </strong>
       </div>
     </aside>
@@ -73,7 +74,7 @@ function Summary({ coupon, setCoupon }) {
 }
 
 export function Cart() {
-  const { cart, updateQty, removeCart } = useStore();
+  const { cart, totals, updateQty, removeCart } = useStore();
   const [coupon, setCoupon] = useState('');
 
   return (
@@ -91,39 +92,42 @@ export function Cart() {
         {cart.length ? (
           <div className="cart-layout">
             <section className="cart-list">
-              {cart.map((item) => (
-                <article className="cart-row" key={item.key}>
-                  <Link to={`/product/${item.id}`}>
-                    <img src={item.image} alt={item.short} />
-                  </Link>
-                  <div className="cart-product-info">
-                    <span className="product-category">
-                      Store: <Link to={`/store/${item.storeId || ''}`}>{item.storeName || item.brand}</Link>
-                    </span>
+              {cart.map((item) => {
+                const storeRoute = item.storeSlug ? `/vendor/${item.storeSlug}` : `/store/${item.storeId || ''}`;
+                return (
+                  <article className="cart-row" key={item.key}>
                     <Link to={`/product/${item.id}`}>
-                      <h2>{item.name || item.short}</h2>
+                      <img src={item.image} alt={item.short} />
                     </Link>
-                    <p>Verified seller item · Express shipping available</p>
-                    <button className="remove-text" onClick={() => removeCart(item.key)}>
-                      <Trash2 size={15} /> Remove
-                    </button>
-                  </div>
-                  <div className="cart-row-price">
-                    <b>{money(item.price)}</b>
-                    {item.oldPrice && <del>{money(item.oldPrice)}</del>}
-                  </div>
-                  <div className="quantity-control large">
-                    <button onClick={() => updateQty(item.key, item.quantity - 1)}>
-                      <Minus size={15} />
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.key, item.quantity + 1)}>
-                      <Plus size={15} />
-                    </button>
-                  </div>
-                  <strong className="cart-subtotal">{money(item.price * item.quantity)}</strong>
-                </article>
-              ))}
+                    <div className="cart-product-info">
+                      <span className="product-category">
+                        Store: <Link to={storeRoute}>{item.storeName || item.brand}</Link>
+                      </span>
+                      <Link to={`/product/${item.id}`}>
+                        <h2>{item.name || item.short}</h2>
+                      </Link>
+                      <p>Verified seller item · Express shipping available</p>
+                      <button className="remove-text" onClick={() => removeCart(item.key)}>
+                        <Trash2 size={15} /> Remove
+                      </button>
+                    </div>
+                    <div className="cart-row-price">
+                      <b>{money(item.price, item.currencyCode)}</b>
+                      {item.oldPrice && <del>{money(item.oldPrice, item.currencyCode)}</del>}
+                    </div>
+                    <div className="quantity-control large">
+                      <button onClick={() => updateQty(item.key, item.quantity - 1)}>
+                        <Minus size={15} />
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQty(item.key, item.quantity + 1)}>
+                        <Plus size={15} />
+                      </button>
+                    </div>
+                    <strong className="cart-subtotal">{money(item.price * item.quantity, item.currencyCode)}</strong>
+                  </article>
+                );
+              })}
             </section>
             <div>
               <Summary coupon={coupon} setCoupon={setCoupon} />
@@ -139,12 +143,10 @@ export function Cart() {
             </div>
           </div>
         ) : (
-          <div className="empty-state cart-empty">
-            <PackageCheck size={42} />
-            <h2>Your basket is empty</h2>
-            <p>Explore smartphones, car gear, fashion, and fresh local foods across our marketplace.</p>
-            <Link to="/shop" className="button primary">
-              Browse All Products
+          <div className="cart-empty-panel">
+            <p>Your cart is empty. Explore verified stores to add items to your basket.</p>
+            <Link to="/" className="button primary" style={{ marginTop: '16px', display: 'inline-block' }}>
+              Explore Stores Directory
             </Link>
           </div>
         )}
@@ -350,7 +352,7 @@ export function Checkout() {
           </div>
 
           <button disabled={isSubmitting} className="button primary checkout-submit" type="submit">
-            {isSubmitting ? 'Confirming order…' : `Place marketplace order · ${money(totals.total)}`}
+            {isSubmitting ? 'Confirming order…' : `Place marketplace order · ${money(totals.total, totals.currencyCode)}`}
           </button>
         </form>
         <Summary coupon={coupon} setCoupon={setCoupon} />
@@ -379,6 +381,11 @@ export function OrderConfirmation() {
         <div className="order-number">
           <span>Order Reference</span>
           <b>{id}</b>
+          {order?.total !== undefined && (
+            <span style={{ marginTop: '6px', display: 'block', fontSize: '15px' }}>
+              Total Paid: <b>{money(order.total, order.currencyCode)}</b>
+            </span>
+          )}
         </div>
         <div className="confirmation-details">
           <span>

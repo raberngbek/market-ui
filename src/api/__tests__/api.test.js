@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { api } from '../client';
+import { api, apiClient } from '../client';
 import { marketPlaceRouter } from '../routers/marketPlace';
 import { categoryRouter } from '../routers/categories';
 import { authRouter } from '../routers/auth';
 import { unitRouter } from '../routers/unit';
+import { getMarketplaceHome } from '../marketplace';
 import { API_URL } from '../config';
 
 // Mock the global fetch
@@ -162,6 +163,100 @@ describe('API Service Layer Tests', () => {
         method: 'DELETE'
       }));
       expect(response).toEqual(mockData);
+    });
+  });
+
+  describe('getMarketplaceHome service', () => {
+    it('should call GET /api/v1/marketplace/home with default parameters and extract envelope data', async () => {
+      const mockResult = {
+        categories: [{ id: 1, name: 'Phones' }],
+        stores: { content: [{ id: 's1', name: 'Tech Store' }], page: 0, totalPages: 1 },
+        featuredProducts: [{ id: 'p1', name: 'iPhone 15' }],
+        products: { content: [{ id: 'p1', name: 'iPhone 15' }], page: 0, totalPages: 1 }
+      };
+
+      const spy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: {
+          status: 200,
+          data: mockResult
+        }
+      });
+
+      const data = await getMarketplaceHome();
+
+      expect(spy).toHaveBeenCalledWith('/api/v1/marketplace/home', expect.objectContaining({
+        params: expect.objectContaining({
+          size: 24,
+          storeSize: 24
+        })
+      }));
+      expect(data).toEqual(mockResult);
+    });
+
+    it('should truncate search query to 120 chars and pass categoryId, page, size, storePage, storeSize', async () => {
+      const longQuery = 'a'.repeat(150);
+      const spy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: { data: { success: true } }
+      });
+
+      await getMarketplaceHome({
+        search: longQuery,
+        categoryId: 'phones',
+        page: 2,
+        size: 12,
+        storePage: 1,
+        storeSize: 6
+      });
+
+      expect(spy).toHaveBeenCalledWith('/api/v1/marketplace/home', expect.objectContaining({
+        params: {
+          search: 'a'.repeat(120),
+          categoryId: 'phones',
+          page: 2,
+          size: 12,
+          storePage: 1,
+          storeSize: 6
+        }
+      }));
+    });
+
+    it('should attach Bearer token when token is in localStorage', async () => {
+      mockStorage.getItem.mockImplementation((key) => {
+        if (key === 'token') return 'test-token-123';
+        return null;
+      });
+
+      const spy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: { products: [] }
+      });
+
+      const data = await getMarketplaceHome();
+
+      expect(spy).toHaveBeenCalledWith('/api/v1/marketplace/home', expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token-123'
+        })
+      }));
+      expect(data).toEqual({ products: [] });
+    });
+
+    it('should attach Bearer token when jwt is in localStorage', async () => {
+      mockStorage.getItem.mockImplementation((key) => {
+        if (key === 'jwt') return 'jwt-token-456';
+        return null;
+      });
+
+      const spy = vi.spyOn(apiClient, 'get').mockResolvedValueOnce({
+        data: { products: [] }
+      });
+
+      await getMarketplaceHome();
+
+      expect(spy).toHaveBeenCalledWith('/api/v1/marketplace/home', expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer jwt-token-456'
+        })
+      }));
     });
   });
 });

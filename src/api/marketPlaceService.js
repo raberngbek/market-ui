@@ -1,9 +1,7 @@
 import apiClient from './client';
+import { getMarketplaceHome } from './marketplace';
 
-export const getMarketPlaceHome = async () => {
-  const response = await apiClient.get('/market_place_home');
-  return response.data;
-};
+export { getMarketplaceHome, getMarketplaceHome as getMarketPlaceHome } from './marketplace';
 
 export const getCategories = async () => {
   const response = await apiClient.get('/categories');

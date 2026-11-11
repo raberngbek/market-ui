@@ -10,3 +10,5 @@ export { vendorRouter, contactRouter, newsletterRouter } from './routers/vendor'
 export { unitRouter } from './routers/unit';
 export { marketPlaceRouter } from './routers/marketPlace';
 export { authRouter } from './routers/auth';
+export { getMarketplaceHome, getMarketPlaceHome } from './marketplace';
+

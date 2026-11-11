@@ -2,6 +2,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { Link, NavLink, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ChevronDown, 
+  ChevronRight,
   Heart, 
   Menu, 
   Search, 
@@ -43,10 +44,12 @@ import AdminPanel from './pages/AdminPanel';
 
 function Header({ onLoginClick, isAuthenticated }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { cart, wishlist, compare, setCartOpen } = useStore();
+
+  const isHome = location.pathname === '/' || location.pathname === '/stores';
 
   const productMatches = query.length > 1 
     ? products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase())).slice(0, 3) 
@@ -68,14 +71,6 @@ function Header({ onLoginClick, isAuthenticated }) {
 
   return (
     <>
-      <div className="utility-bar">
-        <div className="container utility-inner">
-          <span><MapPin size={14} /> Delivering Nationwide & Local Express</span>
-          <span className="utility-promo">Multi-Category Store Marketplace · Code: <b>FRESH10</b> for 10% Off</span>
-          <span><Phone size={14} /> 24/7 Customer Support</span>
-        </div>
-      </div>
-
       <header className="site-header">
         <div className="container header-container">
           {/* Top Row: Logo, Search (desktop), Actions & Mobile Cart/Menu */}
@@ -85,44 +80,46 @@ function Header({ onLoginClick, isAuthenticated }) {
               <span>Market<span>Fresh</span></span>
             </Link>
 
-            {/* Desktop Primary Search */}
-            <form className="header-search hide-mobile" onSubmit={submitSearch}>
-              <Search size={20} />
-              <input 
-                aria-label="Search stores, phones, cars, fashion, tech, and groceries" 
-                value={query} 
-                onChange={(e) => setQuery(e.target.value)} 
-                placeholder="Search stores, phones, cars, tech, fashion, or groceries..." 
-              />
-              <button aria-label="Search" type="submit">Search</button>
+            {/* Desktop Search (hidden on Home view to prevent duplicate search input) */}
+            {!isHome && (
+              <form className="header-search hide-mobile" onSubmit={submitSearch}>
+                <Search size={20} />
+                <input 
+                  aria-label="Search stores, phones, cars, fashion, tech, and groceries" 
+                  value={query} 
+                  onChange={(e) => setQuery(e.target.value)} 
+                  placeholder="Search stores, products, or categories..." 
+                />
+                <button aria-label="Search" type="submit">Search</button>
 
-              {(productMatches.length > 0 || storeMatches.length > 0) && (
-                <div className="search-suggestions">
-                  {storeMatches.length > 0 && (
-                    <div className="suggestion-section">
-                      <small className="suggestion-header">STORES</small>
-                      {storeMatches.map((s) => (
-                        <button key={s.id} type="button" onClick={() => { navigate(`/store/${s.id}`); setQuery(''); }}>
-                          <img src={s.avatar} alt="" />
-                          <span>{s.name}<small>{s.specialty}</small></span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {productMatches.length > 0 && (
-                    <div className="suggestion-section">
-                      <small className="suggestion-header">PRODUCTS</small>
-                      {productMatches.map((product) => (
-                        <button key={product.id} type="button" onClick={() => { navigate(`/product/${product.id}`); setQuery(''); }}>
-                          <img src={product.image} alt="" />
-                          <span>{product.short}<small>{money(product.price)} · {product.storeName || product.brand}</small></span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </form>
+                {(productMatches.length > 0 || storeMatches.length > 0) && (
+                  <div className="search-suggestions">
+                    {storeMatches.length > 0 && (
+                      <div className="suggestion-section">
+                        <small className="suggestion-header">STORES</small>
+                        {storeMatches.map((s) => (
+                          <button key={s.id} type="button" onClick={() => { navigate(`/store/${s.id}`); setQuery(''); }}>
+                            <img src={s.avatar} alt="" />
+                            <span>{s.name}<small>{s.specialty}</small></span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {productMatches.length > 0 && (
+                      <div className="suggestion-section">
+                        <small className="suggestion-header">PRODUCTS</small>
+                        {productMatches.map((product) => (
+                          <button key={product.id} type="button" onClick={() => { navigate(`/product/${product.id}`); setQuery(''); }}>
+                            <img src={product.image} alt="" />
+                            <span>{product.short}<small>{money(product.price)} · {product.storeName || product.brand}</small></span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </form>
+            )}
 
             {/* Secondary Actions */}
             <div className="header-actions">
@@ -157,66 +154,33 @@ function Header({ onLoginClick, isAuthenticated }) {
             </div>
           </div>
 
-          {/* Mobile Second Row: Full-width search */}
-          <div className="header-mobile-search mobile-only">
-            <form className="mobile-search-form" onSubmit={submitSearch}>
-              <Search size={18} />
-              <input 
-                aria-label="Search stores, phones, cars, tech, groceries" 
-                value={query} 
-                onChange={(e) => setQuery(e.target.value)} 
-                placeholder="Search stores, phones, cars, groceries..." 
-              />
-              <button type="submit">Search</button>
-            </form>
-          </div>
+          {/* Mobile Second Row: Full-width search (hidden on Home view) */}
+          {!isHome && (
+            <div className="header-mobile-search mobile-only">
+              <form className="mobile-search-form" onSubmit={submitSearch}>
+                <Search size={18} />
+                <input 
+                  aria-label="Search stores, products" 
+                  value={query} 
+                  onChange={(e) => setQuery(e.target.value)} 
+                  placeholder="Search stores, products..." 
+                />
+                <button type="submit">Search</button>
+              </form>
+            </div>
+          )}
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Clean Secondary Navigation Bar focused on Directory */}
         <nav className="desktop-nav">
           <div className="container nav-inner">
-            <div className="category-trigger">
-              <button onClick={() => setCategoriesOpen(!categoriesOpen)}>
-                <Menu size={18} /> Browse Departments <ChevronDown size={15} />
-              </button>
-              {categoriesOpen && (
-                <div className="mega-menu">
-                  {[
-                    'Phones & Tech', 
-                    'Cars & Auto', 
-                    'Fashion & Apparel', 
-                    'Home & Living', 
-                    'Beauty & Wellness', 
-                    'Produce', 
-                    'Prepared Meals', 
-                    'Bakery', 
-                    'Seafood', 
-                    'Dairy & Eggs', 
-                    'Pantry',
-                    'Drinks'
-                  ].map((name, index) => (
-                    <Link key={name} to={`/category/${encodeURIComponent(name)}`} onClick={() => setCategoriesOpen(false)}>
-                      <span>{String(index + 1).padStart(2, '0')}</span>{name}
-                    </Link>
-                  ))}
-                  <div className="mega-promo">
-                    <small>ALL-IN-ONE MARKETPLACE</small>
-                    <strong>Shop directly from<br />independent stores</strong>
-                    <Link to="/" onClick={() => setCategoriesOpen(false)}>Explore all stores →</Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
             <NavLink className={linkClass} to="/">Stores</NavLink>
             <NavLink className={linkClass} to="/shop">Products</NavLink>
-            <NavLink className={linkClass} to="/deals">Deals</NavLink>
             <NavLink className={linkClass} to="/vendor/register">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <Sparkles size={14} style={{ color: 'var(--color-rating)' }} /> Become a Seller
               </span>
             </NavLink>
-            <NavLink className={linkClass} to="/blog">Stories</NavLink>
             <NavLink className={linkClass} to="/contact">Help</NavLink>
 
             <span className="nav-spacer" />
@@ -246,23 +210,13 @@ function Header({ onLoginClick, isAuthenticated }) {
             {[
               ['Stores Directory', '/'],
               ['All Products', '/shop'],
-              ['Phones & Tech', '/category/Phones%20%26%20Tech'],
-              ['Cars & Auto', '/category/Cars%20%26%20Auto'],
-              ['Fashion & Apparel', '/category/Fashion%20%26%20Apparel'],
-              ['Home & Living', '/category/Home%20%26%20Living'],
-              ['Beauty & Wellness', '/category/Beauty%20%26%20Wellness'],
-              ['Fresh Produce', '/category/Produce'],
-              ['Prepared Meals', '/category/Prepared%20Meals'],
-              ['Bakery & Breads', '/category/Bakery'],
-              ['Weekly Deals', '/deals'],
               ['Become a Seller', '/vendor/register'],
-              ['Stories & News', '/blog'],
               ['Customer Help', '/contact'],
               ['My Account', '/account'],
               ['Admin Panel', '/admin']
             ].map(([name, to]) => (
               <Link key={name} to={to} onClick={() => setMobileOpen(false)}>
-                {name} <ChevronDown size={15} />
+                {name} <ChevronRight size={15} />
               </Link>
             ))}
           </nav>
@@ -291,12 +245,12 @@ function CartDrawer() {
 
         <div className="shipping-progress">
           <span>
-            {Math.max(0, 35 - totals.subtotal) 
-              ? `${money(35 - totals.subtotal)} away from free delivery` 
+            {Math.max(0, (totals.currencyCode === 'KHR' ? 140000 : 35) - totals.subtotal) 
+              ? `${money((totals.currencyCode === 'KHR' ? 140000 : 35) - totals.subtotal, totals.currencyCode)} away from free delivery` 
               : 'Eligible for FREE local delivery!'}
           </span>
           <div>
-            <i style={{ width: `${Math.min(100, (totals.subtotal / 35) * 100)}%` }} />
+            <i style={{ width: `${Math.min(100, (totals.subtotal / (totals.currencyCode === 'KHR' ? 140000 : 35)) * 100)}%` }} />
           </div>
         </div>
 
@@ -311,36 +265,39 @@ function CartDrawer() {
               </Link>
             </div>
           ) : (
-            cart.map((item) => (
-              <article className="drawer-product" key={item.key}>
-                <img src={item.image} alt={item.short} />
-                <div>
-                  <Link to={`/product/${item.id}`} onClick={() => setCartOpen(false)}>
-                    {item.short}
-                  </Link>
-                  {/* Store Attribution badge in Cart Drawer */}
-                  <small className="cart-store-name" style={{ color: 'var(--green)', fontWeight: 600 }}>
-                    Store: <Link to={`/store/${item.storeId || ''}`} onClick={() => setCartOpen(false)} style={{ textDecoration: 'underline' }}>
-                      {item.storeName || item.brand || 'Local Store'}
+            cart.map((item) => {
+              const storeRoute = item.storeSlug ? `/vendor/${item.storeSlug}` : `/store/${item.storeId || ''}`;
+              return (
+                <article className="drawer-product" key={item.key}>
+                  <img src={item.image} alt={item.short} />
+                  <div>
+                    <Link to={`/product/${item.id}`} onClick={() => setCartOpen(false)}>
+                      {item.short}
                     </Link>
-                  </small>
-                  {item.options?.color && <small>Option: {item.options.color}</small>}
-                  <b>{money(item.price)}</b>
-                  <div className="quantity-control">
-                    <button onClick={() => updateQty(item.key, item.quantity - 1)} aria-label="Decrease quantity">
-                      <Minus size={13} />
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.key, item.quantity + 1)} aria-label="Increase quantity">
-                      <Plus size={13} />
-                    </button>
+                    {/* Store Attribution badge in Cart Drawer */}
+                    <small className="cart-store-name" style={{ color: 'var(--green)', fontWeight: 600 }}>
+                      Store: <Link to={storeRoute} onClick={() => setCartOpen(false)} style={{ textDecoration: 'underline' }}>
+                        {item.storeName || item.brand || 'Shopify'}
+                      </Link>
+                    </small>
+                    {item.options?.color && <small>Option: {item.options.color}</small>}
+                    <b>{money(item.price, item.currencyCode)}</b>
+                    <div className="quantity-control">
+                      <button onClick={() => updateQty(item.key, item.quantity - 1)} aria-label="Decrease quantity">
+                        <Minus size={13} />
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQty(item.key, item.quantity + 1)} aria-label="Increase quantity">
+                        <Plus size={13} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <button className="remove-button" onClick={() => removeCart(item.key)} aria-label={`Remove ${item.short}`}>
-                  <Trash2 size={17} />
-                </button>
-              </article>
-            ))
+                  <button className="remove-button" onClick={() => removeCart(item.key)} aria-label={`Remove ${item.short}`}>
+                    <Trash2 size={17} />
+                  </button>
+                </article>
+              );
+            })
           )}
         </div>
 
@@ -348,7 +305,7 @@ function CartDrawer() {
           <footer>
             <div className="totals-row">
               <span>Subtotal</span>
-              <strong>{money(totals.subtotal)}</strong>
+              <strong>{money(totals.subtotal, totals.currencyCode)}</strong>
             </div>
             <Link className="button primary wide" to="/checkout" onClick={() => setCartOpen(false)}>
               Choose delivery time

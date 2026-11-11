@@ -766,7 +766,7 @@ textarea:focus-visible {
    ========================================================================== */
 .directory-hero {
   background: linear-gradient(180deg, #EDF5F1 0%, var(--color-background) 100%);
-  padding: 56px 0 40px;
+  padding: 28px 0 20px;
   text-align: center;
   border-bottom: 1px solid var(--color-border);
 }
@@ -782,9 +782,9 @@ textarea:focus-visible {
 /* Compact Eyebrow */
 .eyebrow {
   display: inline-block;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--color-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -793,12 +793,12 @@ textarea:focus-visible {
 /* Strong Headline in DM Serif Display */
 .directory-hero h1 {
   font-family: var(--font-display);
-  font-size: var(--text-hero);
+  font-size: clamp(28px, 4vw, 42px);
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 1.15;
   letter-spacing: -0.025em;
   color: var(--color-text-primary);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .directory-hero h1 em {
@@ -809,16 +809,16 @@ textarea:focus-visible {
 .directory-hero p {
   max-width: 640px;
   color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1.6;
-  margin-bottom: 26px;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 16px;
 }
 
 /* Central Search Box */
 .directory-search-box {
   width: 100%;
-  max-width: 660px;
-  margin-bottom: 22px;
+  max-width: 620px;
+  margin-bottom: 16px;
 }
 
 .search-input-wrap {
@@ -911,7 +911,8 @@ textarea:focus-visible {
 }
 
 .stores-grid-section {
-  padding-top: 36px;
+  padding-top: 18px;
+  padding-bottom: 40px;
 }
 
 .directory-results-head {
@@ -1219,6 +1220,33 @@ textarea:focus-visible {
   transform: scale(1.04);
 }
 
+.tab-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tab-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.tab-toggle-btn.active {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
 .product-badge {
   position: absolute;
   top: 8px;
@@ -1231,6 +1259,16 @@ textarea:focus-visible {
   font-weight: 700;
   border-radius: var(--radius-xs);
   letter-spacing: 0.02em;
+}
+
+.product-badge.featured {
+  background: linear-gradient(135deg, #F2B84B 0%, #D49228 100%);
+  color: #1A1A1A;
+}
+
+.product-card.featured-card {
+  border-color: rgba(242, 184, 75, 0.4);
+  box-shadow: 0 4px 16px rgba(242, 184, 75, 0.12);
 }
 
 .product-actions {
